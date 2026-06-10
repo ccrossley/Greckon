@@ -3,9 +3,14 @@ services:
     name: greckon
     runtime: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm codegen && pnpm build
+    buildCommand: >-
+      pnpm install --frozen-lockfile &&
+      pnpm codegen &&
+      pnpm build
     startCommand: node packages/api/dist/main.js
     healthCheckPath: /health
     envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
       - key: NODE_VERSION
-        value: 22.14.0
+        value: "22.14.0"

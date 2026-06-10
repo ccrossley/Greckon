@@ -19,8 +19,9 @@
     "stop:client": "node scripts/stop-client.mjs",
     "dev:units-editor": "pnpm --filter @greckon/units-editor dev"
   },
+  "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=20 <25"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
