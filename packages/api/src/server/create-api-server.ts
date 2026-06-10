@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { WebSocketServer, type WebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
+import { startEmbeddedCombat, type EmbeddedCombatHandle } from '@greckon/combat-server';
 import type { ApiConfig, ApiServer } from '../index.js';
 import { createAuthService, getPlayerIdFromToken } from '../auth.js';
 import {
@@ -20,6 +21,7 @@ import {
 import { broadcastLobby, registerLobbyClient, sendLobbyToPlayer } from '../ws/lobby-socket.js';
 import { spawnCombatServer } from '../spawn/combat-server-spawner.js';
 import { spawnCombatBot } from '../bot/spawn-combat-bot.js';
+import { resolvePublicWsBase, useEmbeddedCombat } from './public-url.js';
 import { tryServeWebApp, webAppAvailable } from './static-files.js';
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -46,15 +48,25 @@ function getBearer(req: IncomingMessage): string | undefined {
 
 export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
   const host = process.env.GRECKON_HOST ?? 'localhost';
+  const bindHost = process.env.GRECKON_BIND_HOST ?? '0.0.0.0';
+  const embeddedCombatEnabled = useEmbeddedCombat();
+  const combatWsPath = process.env.GRECKON_COMBAT_WS_PATH ?? '/combat';
+  const publicWsBase = resolvePublicWsBase(config.httpPort);
   const auth = createAuthService();
-  const getLobbyWsUrl = () => `ws://${host}:${config.httpPort}${config.lobbyWsPath}`;
+  const getLobbyWsUrl = () => `${publicWsBase}${config.lobbyWsPath}`;
   const lobby = createLobbyService(getLobbyWsUrl);
   let spawnedServerId: string | undefined;
-  let combatClientPort = Number(process.env.GRECKON_CLIENT_WS_PORT ?? 4001);
+  let embeddedCombat: EmbeddedCombatHandle | undefined;
+  const combatClientPort = Number(process.env.GRECKON_CLIENT_WS_PORT ?? 4001);
 
   const httpServer = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${host}:${config.httpPort}`);
     try {
+      if (req.method === 'GET' && url.pathname === '/health') {
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
       if (req.method === 'POST' && url.pathname === '/auth/login') {
         const body = JSON.parse(await readBody(req)) as { username?: string };
         if (!body.username) {
@@ -141,6 +153,13 @@ export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
   const lobbyWs = new WebSocketServer({ noServer: true });
   const registryWs = new WebSocketServer({ noServer: true });
 
+  function buildCombatWsUrl(server: { host: string; clientWsPort: number }): string {
+    if (embeddedCombatEnabled) {
+      return `${publicWsBase}${combatWsPath}`;
+    }
+    return `ws://${server.host}:${server.clientWsPort}`;
+  }
+
   function tryStartMatchForConnectedHuman(): void {
     if (!spawnedServerId) {
       return;
@@ -153,7 +172,7 @@ export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
     if (!server) {
       return;
     }
-    const combatWsUrl = `ws://${server.host}:${server.clientWsPort}`;
+    const combatWsUrl = buildCombatWsUrl(server);
     setMatchCombatInfo(matchId, combatWsUrl, spawnedServerId);
     assignMatchToCombatServer(matchId, spawnedServerId);
 
@@ -259,32 +278,61 @@ export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
       });
       return;
     }
+    if (embeddedCombat && pathname === combatWsPath) {
+      embeddedCombat.gateway.wss.handleUpgrade(req, socket, head, (ws) => {
+        embeddedCombat!.gateway.wss.emit('connection', ws, req);
+      });
+      return;
+    }
     socket.destroy();
   });
 
   return {
     async start() {
       await new Promise<void>((resolve) => {
-        httpServer.listen(config.httpPort, () => resolve());
+        httpServer.listen(config.httpPort, bindHost, () => resolve());
       });
-      const registryUrl = `ws://${host}:${config.httpPort}${config.combatRegistryWsPath}`;
-      const handle = spawnCombatServer({
-        lobbyWsUrl: registryUrl,
-        clientWsPort: combatClientPort,
-      });
-      spawnedServerId = handle.serverId;
-      console.log(`[lobby] HTTP http://${host}:${config.httpPort}`);
+
+      if (embeddedCombatEnabled) {
+        const registryUrl = `ws://127.0.0.1:${config.httpPort}${config.combatRegistryWsPath}`;
+        embeddedCombat = startEmbeddedCombat({
+          registryWsUrl: registryUrl,
+          publicHost: process.env.RENDER_EXTERNAL_HOSTNAME ?? host,
+          clientWsPort: combatClientPort,
+          reconnectTimeoutSeconds: Number(process.env.GRECKON_RECONNECT_TIMEOUT_SECONDS ?? 30),
+        });
+        console.log(`[lobby] embedded combat server id=${embeddedCombat.serverId}`);
+        console.log(`[lobby] combat client WS ${publicWsBase}${combatWsPath}`);
+      } else {
+        const registryUrl = `ws://${host}:${config.httpPort}${config.combatRegistryWsPath}`;
+        const handle = spawnCombatServer({
+          lobbyWsUrl: registryUrl,
+          clientWsPort: combatClientPort,
+        });
+        spawnedServerId = handle.serverId;
+        console.log(`[lobby] spawned combat server pid=${handle.pid} id=${handle.serverId}`);
+        console.log(`[lobby] combat registry ${registryUrl}`);
+      }
+
+      const publicHttpUrl =
+        process.env.RENDER_EXTERNAL_URL ??
+        process.env.GRECKON_PUBLIC_URL ??
+        `http://${host}:${config.httpPort}`;
+      console.log(`[lobby] HTTP ${publicHttpUrl}`);
       if (webAppAvailable()) {
-        console.log(`[lobby] web client http://${host}:${config.httpPort}/`);
+        console.log(`[lobby] web client ${publicHttpUrl}/`);
       }
       console.log(`[lobby] lobby WS ${getLobbyWsUrl()}`);
-      console.log(`[lobby] combat registry ${registryUrl}`);
-      console.log(`[lobby] spawned combat server pid=${handle.pid} id=${handle.serverId}`);
     },
     async stop() {
       broadcastLobby({ type: 'ServerShutdown', reason: 'shutdown', reconnectAfterMs: 3000 });
-      const { killAllCombatServers } = await import('../spawn/combat-server-spawner.js');
-      await killAllCombatServers();
+      if (embeddedCombat) {
+        await embeddedCombat.close();
+        embeddedCombat = undefined;
+      } else {
+        const { killAllCombatServers } = await import('../spawn/combat-server-spawner.js');
+        await killAllCombatServers();
+      }
       await new Promise<void>((resolve, reject) => {
         httpServer.close((error) => (error ? reject(error) : resolve()));
       });

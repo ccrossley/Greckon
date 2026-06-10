@@ -64,16 +64,9 @@ export function scheduleMatch(assignment: MatchAssignment): void {
   tryStartMatch();
 }
 
-export function startClientGateway(port: number): { close(): Promise<void> } {
-  const config = loadGameConfig();
-  const httpServer = createServer((_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('greckon combat-server');
-  });
-  const wss = new WebSocketServer({ server: httpServer });
-
+function attachGatewayHandlers(wss: WebSocketServer): void {
   wss.on('connection', (socket, req) => {
-    const url = new URL(req.url ?? '/', `http://localhost:${port}`);
+    const url = new URL(req.url ?? '/', 'http://localhost');
     const token = url.searchParams.get('token');
     if (!token || !pendingAssignment) {
       socket.close();
@@ -105,6 +98,34 @@ export function startClientGateway(port: number): { close(): Promise<void> } {
 
     tryStartMatch();
   });
+}
+
+export interface ClientGatewayHandle {
+  wss: WebSocketServer;
+  close(): Promise<void>;
+}
+
+export function createClientGateway(): ClientGatewayHandle {
+  const wss = new WebSocketServer({ noServer: true });
+  attachGatewayHandlers(wss);
+  return {
+    wss,
+    close() {
+      return new Promise((resolve, reject) => {
+        wss.close((error) => (error ? reject(error) : resolve()));
+      });
+    },
+  };
+}
+
+export function startClientGateway(port: number): ClientGatewayHandle & { port: number } {
+  const config = loadGameConfig();
+  const httpServer = createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('greckon combat-server');
+  });
+  const wss = new WebSocketServer({ server: httpServer });
+  attachGatewayHandlers(wss);
 
   httpServer.listen(port);
   console.log(
@@ -112,6 +133,8 @@ export function startClientGateway(port: number): { close(): Promise<void> } {
   );
 
   return {
+    wss,
+    port,
     close() {
       return new Promise((resolve, reject) => {
         wss.close(() => {

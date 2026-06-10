@@ -29,6 +29,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@greckon/combat-server':
+        specifier: workspace:*
+        version: link:../combat-server
       '@greckon/core':
         specifier: workspace:*
         version: link:../core

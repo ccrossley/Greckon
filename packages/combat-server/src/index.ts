@@ -15,7 +15,13 @@ export {
   promptActions,
   promptUnitPick,
 } from './ws/client-gateway.js';
-export { setMatchCompleteHandler, startClientGateway } from './ws/client-gateway-server.js';
+export {
+  createClientGateway,
+  setMatchCompleteHandler,
+  startClientGateway,
+  type ClientGatewayHandle,
+} from './ws/client-gateway-server.js';
+export { startEmbeddedCombat, type EmbeddedCombatHandle } from './embedded.js';
 
 import type { CombatServerConfig } from './lobby-connection.js';
 import { connectToLobby } from './lobby-connection.js';

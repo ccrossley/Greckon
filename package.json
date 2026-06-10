@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "codegen": "node scripts/codegen.mjs",
-    "build": "pnpm --filter @greckon/core build && pnpm --filter @greckon/services build && pnpm --filter @greckon/api build && pnpm --filter @greckon/combat-client build && pnpm --filter @greckon/combat-server build && pnpm --filter @greckon/web build",
+    "build": "pnpm --filter @greckon/core build && pnpm --filter @greckon/services build && pnpm --filter @greckon/combat-server build && pnpm --filter @greckon/api build && pnpm --filter @greckon/combat-client build && pnpm --filter @greckon/web build",
+    "start:prod": "node packages/api/dist/main.js",
     "test": "pnpm -r test",
     "start": "node scripts/start-dev.mjs",
     "start:headless": "node scripts/start-dev.mjs --headless",
@@ -17,6 +18,9 @@
     "stop:lobby": "node scripts/stop-lobby.mjs",
     "stop:client": "node scripts/stop-client.mjs",
     "dev:units-editor": "pnpm --filter @greckon/units-editor dev"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
