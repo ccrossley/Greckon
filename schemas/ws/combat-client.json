@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greckon.local/schemas/ws/combat-client.json",
+  "title": "CombatClientMessage",
+  "oneOf": [
+    { "$ref": "#/$defs/GameState" },
+    { "$ref": "#/$defs/RequestUnitPick" },
+    { "$ref": "#/$defs/UnitPick" },
+    { "$ref": "#/$defs/RequestAction" },
+    { "$ref": "#/$defs/ActionSubmit" },
+    { "$ref": "#/$defs/TurnOutcome" },
+    { "$ref": "#/$defs/RoundResult" },
+    { "$ref": "#/$defs/MatchResult" }
+  ],
+  "$defs": {
+    "UnitType": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "PlaybackEventKind": {
+      "type": "string",
+      "enum": ["spawn", "move", "attack", "heal", "upgrade", "death"]
+    },
+    "AttackType": {
+      "type": "string",
+      "enum": ["line", "projectile", "instant", "multi"]
+    },
+    "MovementType": {
+      "type": "string",
+      "enum": ["float", "hop", "charge"]
+    },
+    "PlayerId": {
+      "type": "string"
+    },
+    "PickPhase": {
+      "type": "string",
+      "enum": ["secret_draft", "round_deploy"]
+    },
+    "ActionInput": {
+      "type": "object",
+      "required": ["unitId", "actionId"],
+      "additionalProperties": false,
+      "properties": {
+        "unitId": { "type": "string" },
+        "actionId": { "type": "string" }
+      }
+    },
+    "AvailableAction": {
+      "type": "object",
+      "required": ["unitId", "actionId", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "unitId": { "type": "string" },
+        "actionId": { "type": "string" },
+        "label": { "type": "string" }
+      }
+    },
+    "AliveUnit": {
+      "type": "object",
+      "required": [
+        "unitId",
+        "unitType",
+        "playerId",
+        "hp",
+        "maxHp",
+        "level",
+        "priority",
+        "x",
+        "y",
+        "attack",
+        "defense",
+        "speed",
+        "ngonSides",
+        "attackRange",
+        "attackType",
+        "attackDelayMs",
+        "travelTimeMs",
+        "movementType"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "unitId": { "type": "string" },
+        "unitType": { "$ref": "#/$defs/UnitType" },
+        "playerId": { "$ref": "#/$defs/PlayerId" },
+        "hp": { "type": "integer", "minimum": 0 },
+        "maxHp": { "type": "integer", "minimum": 1 },
+        "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "priority": { "type": "integer", "minimum": 0 },
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "attack": { "type": "integer", "minimum": 1 },
+        "defense": { "type": "integer", "minimum": 1 },
+        "speed": { "type": "integer", "minimum": 1 },
+        "ngonSides": { "type": "integer", "minimum": 3 },
+        "attackRange": { "type": "number", "minimum": 0.01, "maximum": 1 },
+        "attackType": { "$ref": "#/$defs/AttackType" },
+        "attackDelayMs": { "type": "integer", "minimum": 0 },
+        "travelTimeMs": { "type": "integer", "minimum": 0 },
+        "movementType": { "$ref": "#/$defs/MovementType" },
+        "damage": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "PlaybackEvent": {
+      "type": "object",
+      "required": ["atMs", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "atMs": { "type": "integer", "minimum": 0 },
+        "description": { "type": "string" },
+        "kind": { "$ref": "#/$defs/PlaybackEventKind" },
+        "sourceUnitId": { "type": "string" },
+        "targetUnitId": { "type": "string" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "x2": { "type": "number" },
+        "y2": { "type": "number" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "attackType": { "$ref": "#/$defs/AttackType" },
+        "travelTimeMs": { "type": "integer", "minimum": 0 },
+        "damage": { "type": "integer", "minimum": 0 },
+        "movementType": { "$ref": "#/$defs/MovementType" },
+        "visualYOffset": { "type": "number" },
+        "chargeSpeed": { "type": "number", "minimum": 0, "maximum": 1 },
+        "height": { "type": "number" }
+      }
+    },
+    "RoundWins": {
+      "type": "object",
+      "required": ["playerA", "playerB"],
+      "additionalProperties": false,
+      "properties": {
+        "playerA": { "type": "integer", "minimum": 0 },
+        "playerB": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CombatPhase": {
+      "type": "string",
+      "enum": ["secret_draft", "draft_reveal", "unit_pick", "fight_playback", "action_selection", "round_end", "match_end"]
+    },
+    "GameState": {
+      "type": "object",
+      "required": ["type", "matchId", "round", "roundWins", "phase", "aliveUnits"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "GameState" },
+        "matchId": { "type": "string" },
+        "round": { "type": "integer", "minimum": 0 },
+        "roundWins": { "$ref": "#/$defs/RoundWins" },
+        "phase": { "$ref": "#/$defs/CombatPhase" },
+        "aliveUnits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AliveUnit" }
+        },
+        "ownDraft": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UnitType" }
+        }
+      }
+    },
+    "RequestUnitPick": {
+      "type": "object",
+      "required": ["type", "pickPhase", "pickIndex", "deadlineMs", "availableUnitTypes"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "RequestUnitPick" },
+        "pickPhase": { "$ref": "#/$defs/PickPhase" },
+        "pickIndex": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "deadlineMs": { "type": "integer", "minimum": 1 },
+        "availableUnitTypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UnitType" }
+        }
+      }
+    },
+    "UnitPick": {
+      "type": "object",
+      "required": ["type", "pickIndex", "unitType"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "UnitPick" },
+        "pickPhase": { "$ref": "#/$defs/PickPhase" },
+        "pickIndex": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "unitType": { "$ref": "#/$defs/UnitType" }
+      }
+    },
+    "RequestAction": {
+      "type": "object",
+      "required": ["type", "turnIndex", "deadlineMs", "pickCount", "availableActions"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "RequestAction" },
+        "turnIndex": { "type": "integer", "minimum": 0 },
+        "deadlineMs": { "type": "integer", "minimum": 1 },
+        "pickCount": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "availableActions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AvailableAction" }
+        }
+      }
+    },
+    "ActionSubmit": {
+      "type": "object",
+      "required": ["type", "turnIndex", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "ActionSubmit" },
+        "turnIndex": { "type": "integer", "minimum": 0 },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/ActionInput" }
+        }
+      }
+    },
+    "TurnOutcome": {
+      "type": "object",
+      "required": ["type", "turnIndex", "playback", "fightStartMs", "roundScore", "fieldAtFightStart"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "TurnOutcome" },
+        "turnIndex": { "type": "integer", "minimum": 0 },
+        "fightStartMs": { "type": "integer", "minimum": 0 },
+        "playback": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PlaybackEvent" }
+        },
+        "roundScore": { "$ref": "#/$defs/RoundWins" },
+        "fieldAtFightStart": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AliveUnit" }
+        }
+      }
+    },
+    "RoundResult": {
+      "type": "object",
+      "required": ["type", "round", "roundWins"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "RoundResult" },
+        "round": { "type": "integer", "minimum": 1 },
+        "winnerPlayerId": { "$ref": "#/$defs/PlayerId" },
+        "roundWins": { "$ref": "#/$defs/RoundWins" }
+      }
+    },
+    "MatchResult": {
+      "type": "object",
+      "required": ["type", "winnerPlayerId", "finalRoundWins"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "MatchResult" },
+        "winnerPlayerId": { "$ref": "#/$defs/PlayerId" },
+        "finalRoundWins": { "$ref": "#/$defs/RoundWins" }
+      }
+    }
+  }
+}

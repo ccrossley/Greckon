@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greckon.local/schemas/ws/lobby-client.json",
+  "title": "LobbyClientMessage",
+  "oneOf": [
+    { "$ref": "#/$defs/QueueUpdate" },
+    { "$ref": "#/$defs/MatchFound" },
+    { "$ref": "#/$defs/ServerShutdown" },
+    { "$ref": "#/$defs/Ping" },
+    { "$ref": "#/$defs/Pong" }
+  ],
+  "$defs": {
+    "QueueUpdate": {
+      "type": "object",
+      "required": ["type", "queuePosition"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "QueueUpdate" },
+        "queuePosition": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Opponent": {
+      "type": "object",
+      "required": ["playerId", "username"],
+      "additionalProperties": false,
+      "properties": {
+        "playerId": { "type": "string" },
+        "username": { "type": "string" }
+      }
+    },
+    "MatchFound": {
+      "type": "object",
+      "required": ["type", "matchId", "combatWsUrl", "opponent"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "MatchFound" },
+        "matchId": { "type": "string" },
+        "combatWsUrl": { "type": "string", "format": "uri" },
+        "opponent": { "$ref": "#/$defs/Opponent" }
+      }
+    },
+    "ServerShutdown": {
+      "type": "object",
+      "required": ["type", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "ServerShutdown" },
+        "reason": { "type": "string" },
+        "reconnectAfterMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Ping": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Ping" }
+      }
+    },
+    "Pong": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Pong" }
+      }
+    }
+  }
+}

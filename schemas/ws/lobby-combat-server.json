@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greckon.local/schemas/ws/lobby-combat-server.json",
+  "title": "LobbyCombatServerMessage",
+  "oneOf": [
+    { "$ref": "#/$defs/RegisterServer" },
+    { "$ref": "#/$defs/ServerRegistered" },
+    { "$ref": "#/$defs/AssignMatch" },
+    { "$ref": "#/$defs/MatchComplete" },
+    { "$ref": "#/$defs/LobbyDisconnected" }
+  ],
+  "$defs": {
+    "PlayerRef": {
+      "type": "object",
+      "required": ["playerId", "username", "token"],
+      "additionalProperties": false,
+      "properties": {
+        "playerId": { "type": "string" },
+        "username": { "type": "string" },
+        "token": { "type": "string" }
+      }
+    },
+    "RegisterServer": {
+      "type": "object",
+      "required": ["type", "serverId", "host", "clientWsPort", "capacity"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "RegisterServer" },
+        "serverId": { "type": "string" },
+        "host": { "type": "string" },
+        "clientWsPort": { "type": "integer", "minimum": 1 },
+        "capacity": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ServerRegistered": {
+      "type": "object",
+      "required": ["type", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "ServerRegistered" },
+        "ok": { "const": true }
+      }
+    },
+    "AssignMatch": {
+      "type": "object",
+      "required": ["type", "matchId", "players"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "AssignMatch" },
+        "matchId": { "type": "string" },
+        "players": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/PlayerRef" }
+        }
+      }
+    },
+    "MatchComplete": {
+      "type": "object",
+      "required": ["type", "matchId", "winnerPlayerId"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "MatchComplete" },
+        "matchId": { "type": "string" },
+        "winnerPlayerId": { "type": "string" }
+      }
+    },
+    "LobbyDisconnected": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "LobbyDisconnected" }
+      }
+    }
+  }
+}

@@ -1,0 +1,331 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0f1419;
+  color: #e7ecf3;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.status-line {
+  margin: 0.25rem 0 0;
+  color: #8b98a5;
+  text-transform: capitalize;
+}
+
+.screen {
+  min-height: 120px;
+}
+
+.combat-stage {
+  position: relative;
+  min-height: 420px;
+}
+
+.combat-stage[hidden] {
+  display: none;
+}
+
+.combat-arena {
+  min-height: 420px;
+  background: #0b1015;
+  border: 1px solid #2f3b47;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.combat-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(11, 16, 21, 0.78);
+  z-index: 2;
+  border-radius: 12px;
+}
+
+.combat-overlay[hidden] {
+  display: none;
+}
+
+.combat-overlay.combat-overlay-status {
+  pointer-events: none;
+  background: rgba(11, 16, 21, 0.45);
+}
+
+.combat-wait-banner {
+  margin: 0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 32, 0.92);
+  border: 1px solid #3d5166;
+  color: #d7e3ef;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.action-overlay-panel {
+  max-width: 520px;
+  width: 100%;
+  max-height: 92%;
+  overflow: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.combat-arena[hidden] {
+  display: none;
+}
+
+.combat-arena-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+}
+
+.draft-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.draft-list li {
+  margin: 0.25rem 0;
+}
+
+.combat-field {
+  fill: #111820;
+  stroke: #243040;
+  stroke-width: 0.5;
+}
+
+.combat-unit {
+  transition: none;
+}
+
+.combat-unit path {
+  transition: none;
+}
+
+.attack-line {
+  stroke: #ff6b6b;
+  stroke-width: 0.45;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  animation: attack-flash 120ms ease-out forwards;
+}
+
+.attack-line-projectile {
+  animation: attack-projectile var(--travel-ms, 350ms) linear forwards;
+}
+
+.attack-burst {
+  fill: #ffd166;
+  opacity: 0;
+  animation: attack-flash 120ms ease-out forwards;
+}
+
+@keyframes attack-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes attack-projectile {
+  0% {
+    opacity: 0.2;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.countdown {
+  margin: 0.75rem 0 0.5rem;
+}
+
+.countdown-bar {
+  height: 10px;
+  background: #2f3b47;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.countdown-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: #1d9bf0;
+  border-radius: inherit;
+  transition: width 0.08s linear;
+}
+
+.countdown-bar-fill.urgent {
+  background: #ff6b6b;
+}
+
+.countdown-label {
+  margin: 0.35rem 0 0;
+}
+
+.combat-unit-critical {
+  animation: critical-flash 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes critical-flash {
+  from {
+    stroke: #ff0000;
+  }
+  to {
+    stroke: #660000;
+  }
+}
+
+.panel {
+  background: #16202a;
+  border: 1px solid #2f3b47;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+}
+
+.lead {
+  font-size: 1.05rem;
+}
+
+.muted {
+  color: #8b98a5;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.button-grid button.selected {
+  border-color: #1d9bf0;
+  background: #1a3a52;
+  box-shadow: 0 0 0 1px #1d9bf0;
+}
+
+button {
+  border: 1px solid #3d4f61;
+  background: #223041;
+  color: inherit;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+  background: #2a3d52;
+}
+
+.unit-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.5rem;
+}
+
+.unit-button-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.unit-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+button.primary {
+  background: #1d9bf0;
+  border-color: #1d9bf0;
+  color: #fff;
+}
+
+button.primary:hover {
+  background: #1a8cd8;
+}
+
+.login-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.login-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+input {
+  border: 1px solid #3d4f61;
+  background: #0f1419;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.playback ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.log {
+  background: #0b1015;
+  border: 1px solid #1f2a36;
+  border-radius: 12px;
+  padding: 0.75rem;
+  max-height: 180px;
+  overflow: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  color: #9fb0c0;
+}
+
+.log div + div {
+  margin-top: 0.25rem;
+}

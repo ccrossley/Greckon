@@ -1,0 +1,36 @@
+{
+  "name": "@greckon/services",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@greckon/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./units": {
+      "types": "./dist/units/catalog.d.ts",
+      "import": "./dist/units/catalog.js"
+    },
+    "./units/client": {
+      "types": "./dist/units/client.d.ts",
+      "import": "./dist/units/client.js"
+    },
+    "./units/server": {
+      "types": "./dist/units/server.d.ts",
+      "import": "./dist/units/server.js"
+    }
+  }
+}

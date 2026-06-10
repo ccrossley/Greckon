@@ -1,0 +1,29 @@
+{
+  "name": "greckon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "node scripts/codegen.mjs",
+    "build": "pnpm --filter @greckon/core build && pnpm --filter @greckon/services build && pnpm --filter @greckon/api build && pnpm --filter @greckon/combat-client build && pnpm --filter @greckon/combat-server build && pnpm --filter @greckon/web build",
+    "test": "pnpm -r test",
+    "start": "node scripts/start-dev.mjs",
+    "start:headless": "node scripts/start-dev.mjs --headless",
+    "restart": "node scripts/restart-dev.mjs",
+    "restart:terminal": "node scripts/restart-dev.mjs --terminal",
+    "restart:fast": "node scripts/restart-dev.mjs --no-build",
+    "start:lobby": "node scripts/start-lobby.mjs",
+    "start:client": "node scripts/start-client.mjs",
+    "stop": "node scripts/stop-all.mjs",
+    "stop:lobby": "node scripts/stop-lobby.mjs",
+    "stop:client": "node scripts/stop-client.mjs",
+    "dev:units-editor": "pnpm --filter @greckon/units-editor dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/ws": "^8.18.1",
+    "json-schema-to-typescript": "^15.0.4",
+    "openapi-typescript": "^7.6.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.3"
+  }
+}

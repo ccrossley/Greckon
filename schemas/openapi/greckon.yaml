@@ -1,0 +1,205 @@
+openapi: 3.1.0
+info:
+  title: Greckon API
+  version: 0.1.0
+  description: Prototype auth and lobby endpoints for Greckon matchmaking.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /auth/login:
+    post:
+      operationId: login
+      summary: Log in with a username (prototype, not secure)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Log out and invalidate session token
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      operationId: getMe
+      summary: Get current player session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerSession'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /lobby/join:
+    post:
+      operationId: joinLobby
+      summary: Join the matchmaking queue
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Joined lobby queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinLobbyResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /lobby/leave:
+    post:
+      operationId: leaveLobby
+      summary: Leave the matchmaking queue
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Left lobby
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /lobby/status:
+    get:
+      operationId: getLobbyStatus
+      summary: Get current lobby / match status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lobby status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyStatus'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 1
+
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - playerId
+        - username
+      properties:
+        token:
+          type: string
+        playerId:
+          type: string
+        username:
+          type: string
+
+    PlayerSession:
+      type: object
+      required:
+        - playerId
+        - username
+      properties:
+        playerId:
+          type: string
+        username:
+          type: string
+
+    JoinLobbyResponse:
+      type: object
+      required:
+        - lobbyWsUrl
+        - queuePosition
+      properties:
+        lobbyWsUrl:
+          type: string
+          format: uri
+        queuePosition:
+          type: integer
+          minimum: 1
+
+    LobbyStatus:
+      type: object
+      required:
+        - inQueue
+      properties:
+        inQueue:
+          type: boolean
+        matchId:
+          type: string
+        combatWsUrl:
+          type: string
+          format: uri
+        combatServerId:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        message:
+          type: string
