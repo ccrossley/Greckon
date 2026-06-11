@@ -1,7 +1,7 @@
 [
   {
-    "id": "joey",
-    "name": "Joey",
+    "id": "kiwi_joey",
+    "name": "Kiwi Joey",
     "maxHp": 10,
     "attack": 5,
     "defense": 5,
@@ -18,8 +18,8 @@
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "cub_scrapper",
-    "name": "Cub Scrapper",
+    "id": "scrum_cub",
+    "name": "Scrum Cub",
     "maxHp": 15,
     "attack": 12,
     "defense": 13,
@@ -36,8 +36,8 @@
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "gumthrower",
-    "name": "Gumthrower",
+    "id": "fern_flinger",
+    "name": "Fern Flinger",
     "maxHp": 17,
     "attack": 9,
     "defense": 9,
@@ -49,13 +49,13 @@
     "attackDelayMs": 940,
     "travelTimeMs": 0,
     "movementType": "float",
-    "icon": "leaf-swirl",
+    "icon": "fern",
     "fillColor": "#86efac",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "tree_guard",
-    "name": "Tree Guard",
+    "id": "greenstone_guard",
+    "name": "Greenstone Guard",
     "maxHp": 24,
     "attack": 16,
     "defense": 22,
@@ -68,12 +68,12 @@
     "travelTimeMs": 0,
     "movementType": "charge",
     "icon": "round-shield",
-    "fillColor": "#78716c",
+    "fillColor": "#047857",
     "upgradeColorMod": "hue_shift"
   },
   {
-    "id": "boomerang_koala",
-    "name": "Boomerang Koala",
+    "id": "hangi_hurler",
+    "name": "Hangi Hurler",
     "maxHp": 22,
     "attack": 12,
     "defense": 11,
@@ -85,13 +85,13 @@
     "attackDelayMs": 900,
     "travelTimeMs": 380,
     "movementType": "float",
-    "icon": "boomerang",
+    "icon": "falling-boulder",
     "fillColor": "#b45309",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "burly_climber",
-    "name": "Burly Climber",
+    "id": "haka_koala",
+    "name": "Haka Koala",
     "maxHp": 28,
     "attack": 20,
     "defense": 21,
@@ -108,8 +108,8 @@
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "bark_slinger",
-    "name": "Bark Slinger",
+    "id": "silver_fern_slinger",
+    "name": "Silver Fern Slinger",
     "maxHp": 30,
     "attack": 13,
     "defense": 14,
@@ -121,13 +121,13 @@
     "attackDelayMs": 880,
     "travelTimeMs": 0,
     "movementType": "float",
-    "icon": "eucalyptus",
+    "icon": "koru",
     "fillColor": "#4d7c0f",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "drop_bear",
-    "name": "Drop Bear",
+    "id": "kea_raider",
+    "name": "Kea Raider",
     "maxHp": 30,
     "attack": 34,
     "defense": 18,
@@ -144,8 +144,8 @@
     "upgradeColorMod": "hue_shift"
   },
   {
-    "id": "eucalyptus_sage",
-    "name": "Eucalyptus Sage",
+    "id": "tohunga_sage",
+    "name": "Tohunga Sage",
     "maxHp": 36,
     "attack": 16,
     "defense": 18,
@@ -162,8 +162,8 @@
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "bark_knight",
-    "name": "Bark Knight",
+    "id": "taiaha_warrior",
+    "name": "Taiaha Warrior",
     "maxHp": 40,
     "attack": 30,
     "defense": 32,
@@ -175,13 +175,13 @@
     "attackDelayMs": 880,
     "travelTimeMs": 0,
     "movementType": "charge",
-    "icon": "brutal-helm",
+    "icon": "maori-mask",
     "fillColor": "#71717a",
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "dream_seer",
-    "name": "Dream Seer",
+    "id": "matakite_seer",
+    "name": "Matakite Seer",
     "maxHp": 38,
     "attack": 20,
     "defense": 20,
@@ -198,8 +198,8 @@
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "elder_warden",
-    "name": "Elder Warden",
+    "id": "rangatira",
+    "name": "Rangatira",
     "maxHp": 46,
     "attack": 36,
     "defense": 40,

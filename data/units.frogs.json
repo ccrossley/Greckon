@@ -1,7 +1,7 @@
 [
   {
-    "id": "tadpole",
-    "name": "Tadpole",
+    "id": "wee_tadpole",
+    "name": "Wee Tadpole",
     "maxHp": 7,
     "attack": 7,
     "defense": 3,
@@ -18,8 +18,8 @@
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "froglet",
-    "name": "Froglet",
+    "id": "highland_sprog",
+    "name": "Highland Sprog",
     "maxHp": 10,
     "attack": 14,
     "defense": 8,
@@ -36,8 +36,8 @@
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "tongue_slinger",
-    "name": "Tongue Slinger",
+    "id": "bagpipe_croaker",
+    "name": "Bagpipe Croaker",
     "maxHp": 13,
     "attack": 11,
     "defense": 6,
@@ -49,13 +49,13 @@
     "attackDelayMs": 760,
     "travelTimeMs": 0,
     "movementType": "float",
-    "icon": "lizard-tongue",
+    "icon": "bagpipes",
     "fillColor": "#34d399",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "bullfrog",
-    "name": "Bullfrog",
+    "id": "laird_bullfrog",
+    "name": "Laird Bullfrog",
     "maxHp": 18,
     "attack": 19,
     "defense": 14,
@@ -72,8 +72,8 @@
     "upgradeColorMod": "hue_shift"
   },
   {
-    "id": "spitter",
-    "name": "Spitter",
+    "id": "whisky_spitter",
+    "name": "Whisky Spitter",
     "maxHp": 17,
     "attack": 13,
     "defense": 8,
@@ -85,13 +85,13 @@
     "attackDelayMs": 800,
     "travelTimeMs": 320,
     "movementType": "float",
-    "icon": "death-juice",
+    "icon": "whisky",
     "fillColor": "#84cc16",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "leaper",
-    "name": "Leaper",
+    "id": "caber_leaper",
+    "name": "Caber Leaper",
     "maxHp": 20,
     "attack": 22,
     "defense": 13,
@@ -108,8 +108,8 @@
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "bubbler",
-    "name": "Bubbler",
+    "id": "cauldron_croaker",
+    "name": "Cauldron Croaker",
     "maxHp": 22,
     "attack": 14,
     "defense": 9,
@@ -121,13 +121,13 @@
     "attackDelayMs": 720,
     "travelTimeMs": 0,
     "movementType": "float",
-    "icon": "bubbles",
+    "icon": "cauldron",
     "fillColor": "#5eead4",
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "warty_brute",
-    "name": "Warty Brute",
+    "id": "thistle_brute",
+    "name": "Thistle Brute",
     "maxHp": 28,
     "attack": 28,
     "defense": 22,
@@ -139,13 +139,13 @@
     "attackDelayMs": 780,
     "travelTimeMs": 0,
     "movementType": "hop",
-    "icon": "spotted-frog",
+    "icon": "thistle",
     "fillColor": "#65a30d",
     "upgradeColorMod": "saturate"
   },
   {
-    "id": "plague_toad",
-    "name": "Plague Toad",
+    "id": "midgie_toad",
+    "name": "Midgie Toad",
     "maxHp": 27,
     "attack": 17,
     "defense": 13,
@@ -162,8 +162,8 @@
     "upgradeColorMod": "hue_shift"
   },
   {
-    "id": "marsh_knight",
-    "name": "Marsh Knight",
+    "id": "claymore_knight",
+    "name": "Claymore Knight",
     "maxHp": 31,
     "attack": 33,
     "defense": 27,
@@ -175,13 +175,13 @@
     "attackDelayMs": 760,
     "travelTimeMs": 0,
     "movementType": "charge",
-    "icon": "dripping-blade",
+    "icon": "claymore",
     "fillColor": "#16a34a",
     "upgradeColorMod": "lighten"
   },
   {
-    "id": "oracle_toad",
-    "name": "Oracle Toad",
+    "id": "nessie_seer",
+    "name": "Nessie Seer",
     "maxHp": 30,
     "attack": 21,
     "defense": 15,
@@ -193,13 +193,13 @@
     "attackDelayMs": 640,
     "travelTimeMs": 0,
     "movementType": "float",
-    "icon": "third-eye",
+    "icon": "sea-serpent",
     "fillColor": "#2dd4bf",
     "upgradeColorMod": "spectrum"
   },
   {
-    "id": "bog_champion",
-    "name": "Bog Champion",
+    "id": "highland_chieftain",
+    "name": "Highland Chieftain",
     "maxHp": 35,
     "attack": 39,
     "defense": 33,
@@ -211,7 +211,7 @@
     "attackDelayMs": 720,
     "travelTimeMs": 0,
     "movementType": "charge",
-    "icon": "crown",
+    "icon": "celtic-knot",
     "fillColor": "#15803d",
     "upgradeColorMod": "saturate"
   }
