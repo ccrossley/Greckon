@@ -196,6 +196,24 @@ describe('combat simulation', () => {
     expect(getAttackRange(ranged)).toBeGreaterThan(getAttackRange(melee));
   });
 
+  it('healers support allies with heal playback events', async () => {
+    const { units } = createInitialField({
+      playerAId: 'p1',
+      playerBId: 'p2',
+      picksA: ['healer', 'warrior'],
+      picksB: ['squire'],
+    });
+    const healer = units.find((unit) => unit.unitType === 'healer');
+    const ally = units.find((unit) => unit.unitType === 'warrior' && unit.playerId === 'p1');
+    if (healer && ally) {
+      ally.hp = Math.max(1, Math.round(ally.maxHp * 0.4));
+      healer.x = ally.x - 0.03;
+      healer.y = ally.y;
+    }
+    const result = await runSimulation(units, 'p1', 'p2');
+    expect(result.playback.some((event) => event.kind === 'heal')).toBe(true);
+  });
+
   it('emits projectile attacks with travel metadata', async () => {
     const { units } = createInitialField({
       playerAId: 'p1',

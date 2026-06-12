@@ -1,0 +1,11 @@
+{
+  "id": "marsh_tyrant",
+  "unitId": "marsh_tyrant",
+  "canvasSize": 512,
+  "sprite": "marsh_tyrant.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a large toad tyrant with a tiny crown being carried by smaller frogs beneath him, green spotted frog skin, accent #f97316"
+}

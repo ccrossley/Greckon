@@ -95,11 +95,12 @@ export async function runCombatSession(
       actionRequest.deadlineMs,
       actionRequest.turnIndex,
       token,
-      actionRequest.pickCount,
+      actionRequest.pickIndex,
     );
     combatWs.send({
       type: 'ActionSubmit',
       turnIndex: actionRequest.turnIndex,
+      pickIndex: actionRequest.pickIndex,
       actions,
     });
 

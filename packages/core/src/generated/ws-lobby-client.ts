@@ -13,6 +13,7 @@ export interface MatchFound {
 export interface Opponent {
   playerId: string;
   username: string;
+  factionId: string;
 }
 export interface ServerShutdown {
   type: "ServerShutdown";

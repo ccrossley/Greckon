@@ -1,10 +1,17 @@
 import type { CombatUnit, PlaybackEvent, PlayerId } from '../../types/domain.js';
 import { getCombatTuning } from '../../config/combat-tuning.js';
-import { computeAttackDamage, getMaxDamagePerTick, getUnitDisplayName } from '../../game-data/index.js';
+import { getUnitDisplayName } from '../../game-data/index.js';
+import {
+  executeAbility,
+  getAbilityForUnit,
+  landPendingAbilityAttack,
+  resolveAbilityTargets,
+  tickStatusEffects,
+  type AbilityExecutionContext,
+  type PendingAbilityAttack,
+} from '../abilities/index.js';
 import {
   decayChargeWhenHolding,
-  findEnemiesInRange,
-  findEnemyInRange,
   getChargeImpactReady,
   resetChargeAfterImpact,
 } from './forces.js';
@@ -13,36 +20,6 @@ import {
   createTerrestrialMovementState,
 } from './terrestrial-locomotion.js';
 import { createPhysicsWorld, type PhysicsWorld } from './world.js';
-
-interface PendingAttack {
-  landAtMs: number;
-  attacker: Pick<CombatUnit, 'unitId' | 'unitType' | 'x' | 'y' | 'attackType' | 'travelTimeMs' | 'movementType'>;
-  targetId: string;
-  damage: number;
-}
-
-function computeUnitDamage(attacker: CombatUnit, target: CombatUnit): number {
-  return attacker.damage ?? computeAttackDamage(attacker.attack, target.defense);
-}
-
-function cappedDamage(
-  rawDamage: number,
-  target: CombatUnit,
-  damageAppliedThisTick: Map<string, number>,
-): number {
-  const tickCap = getMaxDamagePerTick(target.maxHp);
-  const alreadyApplied = damageAppliedThisTick.get(target.unitId) ?? 0;
-  return Math.min(rawDamage, Math.max(0, tickCap - alreadyApplied));
-}
-
-function applyDamage(
-  target: CombatUnit,
-  damage: number,
-  damageAppliedThisTick: Map<string, number>,
-): void {
-  damageAppliedThisTick.set(target.unitId, (damageAppliedThisTick.get(target.unitId) ?? 0) + damage);
-  target.hp = Math.max(0, target.hp - damage);
-}
 
 function pushDeathEvent(playback: PlaybackEvent[], atMs: number, target: CombatUnit, world: PhysicsWorld): void {
   playback.push({
@@ -56,44 +33,11 @@ function pushDeathEvent(playback: PlaybackEvent[], atMs: number, target: CombatU
   });
 }
 
-function pushAttackEvent(
-  playback: PlaybackEvent[],
-  atMs: number,
-  attacker: Pick<CombatUnit, 'unitId' | 'unitType' | 'x' | 'y' | 'attackType' | 'travelTimeMs' | 'movementType'>,
-  target: CombatUnit,
-  damage: number,
-  world: PhysicsWorld,
-  options?: { durationMs?: number; travelTimeMs?: number },
-): void {
-  playback.push({
-    atMs,
-    kind: 'attack',
-    description: `${getUnitDisplayName(attacker.unitType)} hits ${getUnitDisplayName(target.unitType)} for ${damage}`,
-    sourceUnitId: attacker.unitId,
-    targetUnitId: target.unitId,
-    x: attacker.x,
-    y: attacker.y,
-    x2: target.x,
-    y2: target.y,
-    height: world.getWorldHeight(attacker.unitId, atMs, attacker.movementType),
-    attackType: attacker.attackType,
-    travelTimeMs: options?.travelTimeMs ?? attacker.travelTimeMs,
-    damage,
-    durationMs: options?.durationMs,
-  });
-}
-
-function attackLineFlashMs(): number {
-  return getCombatTuning().playback.attackLineFlashMs;
-}
-
 function processPendingAttacks(
   atMs: number,
-  pending: PendingAttack[],
+  pending: PendingAbilityAttack[],
   units: CombatUnit[],
-  playback: PlaybackEvent[],
-  damageAppliedThisTick: Map<string, number>,
-  world: PhysicsWorld,
+  ctx: AbilityExecutionContext,
 ): void {
   const unitsById = new Map(units.map((unit) => [unit.unitId, unit]));
   for (let index = pending.length - 1; index >= 0; index--) {
@@ -106,20 +50,7 @@ function processPendingAttacks(
       pending.splice(index, 1);
       continue;
     }
-    const damage = cappedDamage(attack.damage, target, damageAppliedThisTick);
-    if (damage <= 0) {
-      pending.splice(index, 1);
-      continue;
-    }
-    applyDamage(target, damage, damageAppliedThisTick);
-    pushAttackEvent(playback, atMs, attack.attacker, target, damage, world, {
-      durationMs: 0,
-      travelTimeMs: attack.attacker.travelTimeMs,
-    });
-    if (target.hp <= 0) {
-      pushDeathEvent(playback, atMs, target, world);
-      world.removeUnit(target.unitId);
-    }
+    landPendingAbilityAttack(attack, target, ctx);
     pending.splice(index, 1);
   }
 }
@@ -129,146 +60,29 @@ function tryChargeImpact(
   units: CombatUnit[],
   atMs: number,
   world: PhysicsWorld,
-  playback: PlaybackEvent[],
-  pendingAttacks: PendingAttack[],
-  damageAppliedThisTick: Map<string, number>,
-  lastAttackMs: Map<string, number>,
+  ctx: AbilityExecutionContext,
 ): boolean {
   if (unit.movementType !== 'charge' || !getChargeImpactReady(world, unit.unitId)) {
     return false;
   }
 
-  const charge = getCombatTuning().movement.charge;
-  const targets =
-    unit.attackType === 'multi'
-      ? findEnemiesInRange(unit, units, unit.attackRange)
-      : (() => {
-          const primary = findEnemyInRange(unit, units, unit.attackRange);
-          return primary ? [primary] : [];
-        })();
+  const ability = getAbilityForUnit(unit.unitType);
+  const targets = resolveAbilityTargets(unit, ability, units);
   if (targets.length === 0) {
     return false;
   }
 
-  const lastAttack = lastAttackMs.get(unit.unitId) ?? Number.NEGATIVE_INFINITY;
+  const lastAttack = ctx.lastAttackMs.get(unit.unitId) ?? Number.NEGATIVE_INFINITY;
   if (atMs - lastAttack < unit.attackDelayMs) {
     return false;
   }
 
-  lastAttackMs.set(unit.unitId, atMs);
   resetChargeAfterImpact(world, unit.unitId);
-
-  if (unit.attackType === 'multi') {
-    for (const target of targets) {
-      const rawDamage = Math.ceil(computeUnitDamage(unit, target) * charge.impactDamageScale);
-      const damage = cappedDamage(rawDamage, target, damageAppliedThisTick);
-      if (damage <= 0) {
-        continue;
-      }
-      applyDamage(target, damage, damageAppliedThisTick);
-      pushAttackEvent(playback, atMs, unit, target, damage, world, { durationMs: attackLineFlashMs() });
-      if (target.hp <= 0) {
-        pushDeathEvent(playback, atMs, target, world);
-        world.removeUnit(target.unitId);
-      }
-    }
-    return true;
-  }
-
-  const target = targets[0]!;
-  const rawDamage = Math.ceil(computeUnitDamage(unit, target) * charge.impactDamageScale);
-  const damage = cappedDamage(rawDamage, target, damageAppliedThisTick);
-  if (damage <= 0) {
-    return false;
-  }
-
-  if (unit.attackType === 'projectile') {
-    pushAttackEvent(playback, atMs, unit, target, damage, world, {
-      durationMs: unit.travelTimeMs,
-      travelTimeMs: unit.travelTimeMs,
-    });
-    pendingAttacks.push({
-      landAtMs: atMs + unit.travelTimeMs,
-      attacker: { ...unit },
-      targetId: target.unitId,
-      damage: rawDamage,
-    });
-    return true;
-  }
-
-  applyDamage(target, damage, damageAppliedThisTick);
-  pushAttackEvent(playback, atMs, unit, target, damage, world, {
-    durationMs: unit.attackType === 'line' ? attackLineFlashMs() : 0,
+  executeAbility(unit, targets, {
+    ...ctx,
+    chargeDamageScale: getCombatTuning().movement.charge.impactDamageScale,
   });
-  if (target.hp <= 0) {
-    pushDeathEvent(playback, atMs, target, world);
-    world.removeUnit(target.unitId);
-  }
   return true;
-}
-
-function fireAttack(
-  unit: CombatUnit,
-  targets: CombatUnit[],
-  atMs: number,
-  playback: PlaybackEvent[],
-  pending: PendingAttack[],
-  damageAppliedThisTick: Map<string, number>,
-  lastAttackMs: Map<string, number>,
-  world: PhysicsWorld,
-): void {
-  if (targets.length === 0) {
-    return;
-  }
-
-  lastAttackMs.set(unit.unitId, atMs);
-
-  if (unit.attackType === 'multi') {
-    for (const target of targets) {
-      const rawDamage = computeUnitDamage(unit, target);
-      const damage = cappedDamage(rawDamage, target, damageAppliedThisTick);
-      if (damage <= 0) {
-        continue;
-      }
-      applyDamage(target, damage, damageAppliedThisTick);
-      pushAttackEvent(playback, atMs, unit, target, damage, world, { durationMs: attackLineFlashMs() });
-      if (target.hp <= 0) {
-        pushDeathEvent(playback, atMs, target, world);
-        world.removeUnit(target.unitId);
-      }
-    }
-    return;
-  }
-
-  const target = targets[0]!;
-  const rawDamage = computeUnitDamage(unit, target);
-  const damage = cappedDamage(rawDamage, target, damageAppliedThisTick);
-  if (damage <= 0) {
-    return;
-  }
-
-  if (unit.attackType === 'projectile') {
-    pushAttackEvent(playback, atMs, unit, target, damage, world, {
-      durationMs: unit.travelTimeMs,
-      travelTimeMs: unit.travelTimeMs,
-    });
-    pending.push({
-      landAtMs: atMs + unit.travelTimeMs,
-      attacker: { ...unit },
-      targetId: target.unitId,
-      damage: rawDamage,
-    });
-    return;
-  }
-
-  applyDamage(target, damage, damageAppliedThisTick);
-  pushAttackEvent(playback, atMs, unit, target, damage, world, {
-    durationMs: unit.attackType === 'line' ? attackLineFlashMs() : 0,
-  });
-  if (target.hp <= 0) {
-    pushDeathEvent(playback, atMs, target, world);
-    world.removeUnit(target.unitId);
-  }
 }
 
 export async function runPhysicsSimulation(
@@ -277,10 +91,10 @@ export async function runPhysicsSimulation(
   playerBId: PlayerId,
   startAtMs = 100,
 ): Promise<{ playback: PlaybackEvent[]; survivors: CombatUnit[] }> {
-  const units = initialUnits.map((unit) => ({ ...unit }));
+  const units = initialUnits.map((unit) => ({ ...unit, statusEffects: unit.statusEffects ?? [] }));
   const playback: PlaybackEvent[] = [];
   const lastAttackMs = new Map<string, number>();
-  const pendingAttacks: PendingAttack[] = [];
+  const pendingAttacks: PendingAbilityAttack[] = [];
   const world = await createPhysicsWorld();
   const movementState = createTerrestrialMovementState();
   world.syncBodies(units);
@@ -315,72 +129,55 @@ export async function runPhysicsSimulation(
     }
 
     const damageAppliedThisTick = new Map<string, number>();
-    processPendingAttacks(atMs, pendingAttacks, units, playback, damageAppliedThisTick, world);
+    const ctx: AbilityExecutionContext = {
+      atMs,
+      playback,
+      pending: pendingAttacks,
+      damageAppliedThisTick,
+      lastAttackMs,
+      world,
+    };
 
+    tickStatusEffects(units, atMs, (_sourceUnitId, target, dotDamage) => {
+      const applied = Math.min(dotDamage, target.hp);
+      if (applied <= 0) {
+        return;
+      }
+      target.hp = Math.max(0, target.hp - applied);
+      damageAppliedThisTick.set(target.unitId, (damageAppliedThisTick.get(target.unitId) ?? 0) + applied);
+      if (target.hp <= 0) {
+        pushDeathEvent(playback, atMs, target, world);
+        world.removeUnit(target.unitId);
+      }
+    });
+
+    processPendingAttacks(atMs, pendingAttacks, units, ctx);
     applyTerrestrialCombatStep(world, units, movementState, atMs, playerAId, playerBId);
 
     for (const unit of alive) {
       if (unit.hp <= 0) {
         continue;
       }
-      const allies = alive.filter(
-        (other) => other.playerId === unit.playerId && other.unitId !== unit.unitId,
-      );
-      const attackRange = unit.attackRange;
-      const primaryTarget = findEnemyInRange(unit, alive, attackRange);
-      const targetsInRange =
-        unit.attackType === 'multi'
-          ? findEnemiesInRange(unit, alive, attackRange)
-          : primaryTarget
-            ? [primaryTarget]
-            : [];
 
-      if (targetsInRange.length === 0) {
-        if (
-          tryChargeImpact(
-            unit,
-            units,
-            atMs,
-            world,
-            playback,
-            pendingAttacks,
-            damageAppliedThisTick,
-            lastAttackMs,
-          )
-        ) {
+      const ability = getAbilityForUnit(unit.unitType);
+      const targets = resolveAbilityTargets(unit, ability, alive);
+
+      if (targets.length === 0) {
+        if (tryChargeImpact(unit, units, atMs, world, ctx)) {
           continue;
         }
-      } else {
-        if (
-          tryChargeImpact(
-            unit,
-            units,
-            atMs,
-            world,
-            playback,
-            pendingAttacks,
-            damageAppliedThisTick,
-            lastAttackMs,
-          )
-        ) {
-          continue;
-        }
-        decayChargeWhenHolding(world, unit.unitId);
+        continue;
+      }
 
-        const lastAttack = lastAttackMs.get(unit.unitId) ?? Number.NEGATIVE_INFINITY;
-        if (atMs - lastAttack >= unit.attackDelayMs) {
-          const liveTargets = targetsInRange.filter((target) => target.hp > 0);
-          fireAttack(
-            unit,
-            liveTargets,
-            atMs,
-            playback,
-            pendingAttacks,
-            damageAppliedThisTick,
-            lastAttackMs,
-            world,
-          );
-        }
+      if (tryChargeImpact(unit, units, atMs, world, ctx)) {
+        continue;
+      }
+      decayChargeWhenHolding(world, unit.unitId);
+
+      const lastAttack = lastAttackMs.get(unit.unitId) ?? Number.NEGATIVE_INFINITY;
+      if (atMs - lastAttack >= unit.attackDelayMs) {
+        const liveTargets = targets.filter((target) => target.hp > 0);
+        executeAbility(unit, liveTargets, ctx);
       }
     }
 

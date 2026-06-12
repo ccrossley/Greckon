@@ -1,0 +1,11 @@
+{
+  "id": "horde_champion",
+  "unitId": "horde_champion",
+  "canvasSize": 512,
+  "sprite": "horde_champion.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a stocky koala horde champion in battle-worn armor with shield and greatsword, grey fur round ears, accent #ea580c"
+}

@@ -14,6 +14,7 @@ import {
 } from '@greckon/core';
 import { resolveService, ServiceTokens } from '@greckon/services';
 import type { UnitCatalog } from '@greckon/services/units';
+import { createUnitSpriteGroup, hasUnitSprite } from './unit-sprite.js';
 
 function unitCatalog(): UnitCatalog {
   return resolveService(ServiceTokens.UnitCatalog);
@@ -21,6 +22,14 @@ function unitCatalog(): UnitCatalog {
 
 function attackLineFlashMs(): number {
   return getCombatTuning().playback.attackLineFlashMs;
+}
+
+function unitEnterMs(): number {
+  return getCombatTuning().playback.unitPresence.enterMs;
+}
+
+function unitExitMs(): number {
+  return getCombatTuning().playback.unitPresence.exitMs;
 }
 
 interface MoveKeyframe {
@@ -40,6 +49,14 @@ function easeOutQuad(t: number): number {
   return 1 - (1 - t) * (1 - t);
 }
 
+function easeInQuad(t: number): number {
+  return t * t;
+}
+
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
 function chargeIconSpeedScale(): number {
   return getCombatTuning().playback.charge.iconSpeedScale;
 }
@@ -49,12 +66,39 @@ function projectMotion(fieldX: number, fieldZ: number, heightM: number): { x: nu
   return { x: screen.screenX, y: screen.screenY };
 }
 
-const FIGHT_PLAYBACK_KINDS = new Set<PlaybackEvent['kind']>(['move', 'attack', 'death']);
+const FIGHT_PLAYBACK_KINDS = new Set<PlaybackEvent['kind']>([
+  'move',
+  'attack',
+  'heal',
+  'death',
+  'spawn',
+]);
+
+const PLAYBACK_KIND_ORDER: Partial<Record<NonNullable<PlaybackEvent['kind']>, number>> = {
+  move: 0,
+  attack: 1,
+  heal: 2,
+  death: 3,
+  spawn: 4,
+};
+
+function comparePlaybackEvents(left: PlaybackEvent, right: PlaybackEvent): number {
+  if (left.atMs !== right.atMs) {
+    return left.atMs - right.atMs;
+  }
+  const leftOrder = PLAYBACK_KIND_ORDER[left.kind ?? 'move'] ?? 99;
+  const rightOrder = PLAYBACK_KIND_ORDER[right.kind ?? 'move'] ?? 99;
+  return leftOrder - rightOrder;
+}
 
 function sliceFightPlayback(playback: PlaybackEvent[], fightStartMs: number): PlaybackEvent[] {
-  return playback.filter(
-    (event) => event.atMs >= fightStartMs && FIGHT_PLAYBACK_KINDS.has(event.kind),
-  );
+  return playback
+    .filter((event) => event.atMs >= fightStartMs && FIGHT_PLAYBACK_KINDS.has(event.kind))
+    .sort(comparePlaybackEvents);
+}
+
+function fightPlaybackEndMs(playback: PlaybackEvent[], startMs: number): number {
+  return playback.reduce((max, event) => Math.max(max, event.atMs), startMs);
 }
 
 function buildMotionTracks(
@@ -190,12 +234,98 @@ export function createCombatArena(root: HTMLElement): CombatArena {
 
   const unitElements = new Map<string, SVGGElement>();
   const unitPaths = new Map<string, SVGPathElement>();
+  const unitUsesSprite = new Set<string>();
   const unitVisualCache = new Map<string, { level: number; hp: number; scale: number }>();
   const unitVisualOffsets = new Map<string, number>();
+  const unitPresenceScale = new Map<string, number>();
+  const unitLastDisplay = new Map<string, { x: number; y: number; chargeSpeed?: number }>();
+  const presenceAnimFrames = new Map<string, number>();
+  const exitingUnitIds = new Set<string>();
   const attackLineTimers = new Set<number>();
   let unitsById = new Map<string, CombatUnit>();
   let playbackRoster: CombatUnit[] = [];
   let playbackActive = false;
+
+  function cancelPresenceAnimation(unitId: string): void {
+    const frameId = presenceAnimFrames.get(unitId);
+    if (frameId !== undefined) {
+      window.cancelAnimationFrame(frameId);
+      presenceAnimFrames.delete(unitId);
+    }
+  }
+
+  function rerenderUnitAtLastDisplay(unitId: string): void {
+    const unit = unitsById.get(unitId);
+    const display = unitLastDisplay.get(unitId);
+    if (!unit || !display) {
+      return;
+    }
+    renderUnit(unit, false, display);
+  }
+
+  function startPresenceAnimation(
+    unitId: string,
+    from: number,
+    to: number,
+    durationMs: number,
+    onComplete?: () => void,
+  ): void {
+    cancelPresenceAnimation(unitId);
+    unitPresenceScale.set(unitId, from);
+    rerenderUnitAtLastDisplay(unitId);
+
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = durationMs <= 0 ? 1 : Math.min(1, elapsed / durationMs);
+      const eased = to > from ? easeOutCubic(t) : easeInQuad(t);
+      unitPresenceScale.set(unitId, lerp(from, to, eased));
+      rerenderUnitAtLastDisplay(unitId);
+
+      if (t < 1) {
+        presenceAnimFrames.set(unitId, window.requestAnimationFrame(tick));
+        return;
+      }
+
+      presenceAnimFrames.delete(unitId);
+      if (to === 0) {
+        unitPresenceScale.delete(unitId);
+        onComplete?.();
+        return;
+      }
+      unitPresenceScale.set(unitId, 1);
+    };
+
+    presenceAnimFrames.set(unitId, window.requestAnimationFrame(tick));
+  }
+
+  function animateUnitEnter(unitId: string): void {
+    startPresenceAnimation(unitId, 0, 1, unitEnterMs());
+  }
+
+  function animateUnitExit(unitId: string, onComplete: () => void): void {
+    exitingUnitIds.add(unitId);
+    const current = unitPresenceScale.get(unitId) ?? 1;
+    startPresenceAnimation(unitId, current, 0, unitExitMs(), () => {
+      exitingUnitIds.delete(unitId);
+      onComplete();
+    });
+  }
+
+  function finalizePlaybackVisuals(): void {
+    for (const unitId of presenceAnimFrames.keys()) {
+      cancelPresenceAnimation(unitId);
+    }
+    exitingUnitIds.clear();
+    for (const [unitId, unit] of unitsById.entries()) {
+      if (unit.hp <= 0) {
+        removeUnit(unitId);
+        continue;
+      }
+      unitPresenceScale.set(unitId, 1);
+      rerenderUnitAtLastDisplay(unitId);
+    }
+  }
 
   function finishPlayback(): void {
     playbackActive = false;
@@ -220,18 +350,28 @@ export function createCombatArena(root: HTMLElement): CombatArena {
   ): void {
     let group = unitElements.get(unit.unitId);
     let shape = unitPaths.get(unit.unitId);
-    if (!group || !shape) {
+    const usesSprite = unitUsesSprite.has(unit.unitId);
+    if (!group || (!usesSprite && !shape)) {
       group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       group.setAttribute('class', 'combat-unit');
       group.dataset.unitId = unit.unitId;
-      shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      shape.setAttribute('d', getUnitIconPath(unit.unitType));
-      shape.setAttribute('paint-order', 'stroke fill');
-      shape.setAttribute('stroke-width', String(UNIT_ICON_STROKE_WIDTH));
-      group.appendChild(shape);
+      if (hasUnitSprite(unit.unitType)) {
+        const sprite = createUnitSpriteGroup(unit.unitType);
+        if (sprite) {
+          group.appendChild(sprite);
+          unitUsesSprite.add(unit.unitId);
+        }
+      }
+      if (!unitUsesSprite.has(unit.unitId)) {
+        shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        shape.setAttribute('d', getUnitIconPath(unit.unitType));
+        shape.setAttribute('paint-order', 'stroke fill');
+        shape.setAttribute('stroke-width', String(UNIT_ICON_STROKE_WIDTH));
+        group.appendChild(shape);
+        unitPaths.set(unit.unitId, shape);
+      }
       unitsLayer.appendChild(group);
       unitElements.set(unit.unitId, group);
-      unitPaths.set(unit.unitId, shape);
       unitVisualCache.delete(unit.unitId);
     }
 
@@ -240,7 +380,9 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     const cy = toSvgY(projected.y);
     const radius = unitRadius(unit);
     const chargeSpeed = display?.chargeSpeed ?? 0;
-    const iconScale = getUnitIconScale(radius) * (1 + chargeSpeed * chargeIconSpeedScale());
+    const presenceScale = unitPresenceScale.get(unit.unitId) ?? 1;
+    const iconScale =
+      getUnitIconScale(radius) * (1 + chargeSpeed * chargeIconSpeedScale()) * presenceScale;
     const hpRatio = unit.maxHp > 0 ? unit.hp / unit.maxHp : 0;
 
     group.style.transition = 'none';
@@ -251,15 +393,32 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     );
 
     const definition = unitCatalog().getUnitDefinition(unit.unitType);
-    shape.setAttribute('fill', resolveUnitFillColor(definition, unit.level));
-    shape.setAttribute('stroke', getHealthBorderColor(hpRatio));
-    if (isCriticalHealth(hpRatio)) {
-      shape.setAttribute('class', 'combat-unit-critical');
-    } else {
-      shape.removeAttribute('class');
+    if (unitUsesSprite.has(unit.unitId)) {
+      group.setAttribute('class', isCriticalHealth(hpRatio) ? 'combat-unit combat-unit-critical' : 'combat-unit');
+    } else if (shape) {
+      shape.setAttribute('fill', resolveUnitFillColor(definition, unit.level));
+      shape.setAttribute('stroke', getHealthBorderColor(hpRatio));
+      if (isCriticalHealth(hpRatio)) {
+        shape.setAttribute('class', 'combat-unit-critical');
+      } else {
+        shape.removeAttribute('class');
+      }
     }
 
     unitVisualCache.set(unit.unitId, { level: unit.level, hp: unit.hp, scale: iconScale });
+    unitLastDisplay.set(unit.unitId, { x: projected.x, y: projected.y, chargeSpeed });
+  }
+
+  function applyHealFromEvent(event: PlaybackEvent): void {
+    if (event.kind !== 'heal' || !event.targetUnitId || event.healAmount === undefined) {
+      return;
+    }
+    const target = unitsById.get(event.targetUnitId);
+    if (!target) {
+      return;
+    }
+    target.hp = Math.min(target.maxHp, target.hp + event.healAmount);
+    renderUnit(target, false, projectMotion(target.x, target.y, 0));
   }
 
   function applyDamageFromAttack(event: PlaybackEvent): void {
@@ -282,15 +441,19 @@ export function createCombatArena(root: HTMLElement): CombatArena {
   }
 
   function removeUnit(unitId: string): void {
+    cancelPresenceAnimation(unitId);
     const group = unitElements.get(unitId);
     if (group) {
       group.remove();
       unitElements.delete(unitId);
       unitPaths.delete(unitId);
+      unitUsesSprite.delete(unitId);
       unitVisualCache.delete(unitId);
     }
     unitsById.delete(unitId);
     unitVisualOffsets.delete(unitId);
+    unitPresenceScale.delete(unitId);
+    unitLastDisplay.delete(unitId);
   }
 
   function resolveScreenPoint(
@@ -327,8 +490,19 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     if (!from || !to) {
       return;
     }
+    const isHeal = event.playbackBeam === 'heal';
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('class', animate ? 'attack-line attack-line-projectile' : 'attack-line');
+    const classes = ['attack-line'];
+    if (animate) {
+      classes.push('attack-line-projectile');
+    }
+    if (isHeal) {
+      classes.push('attack-line-heal');
+    }
+    line.setAttribute('class', classes.join(' '));
+    if (event.playbackColor) {
+      line.style.stroke = event.playbackColor;
+    }
     line.setAttribute('x1', String(toSvgX(from.x)));
     line.setAttribute('y1', String(toSvgY(from.y)));
     line.setAttribute('x2', String(toSvgX(to.x)));
@@ -354,8 +528,12 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     if (!point) {
       return;
     }
+    const isHeal = event.playbackBeam === 'heal';
     const burst = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    burst.setAttribute('class', 'attack-burst');
+    burst.setAttribute('class', isHeal ? 'attack-burst attack-burst-heal' : 'attack-burst');
+    if (event.playbackColor) {
+      burst.style.fill = event.playbackColor;
+    }
     burst.setAttribute('cx', String(toSvgX(point.x)));
     burst.setAttribute('cy', String(toSvgY(point.y)));
     burst.setAttribute('r', '1');
@@ -367,7 +545,15 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     attackLineTimers.add(timer);
   }
 
+  function renderHeal(event: PlaybackEvent, motionTracks: Map<string, MoveKeyframe[]>): void {
+    drawAttackLine(event, event.durationMs && event.durationMs > 0 ? event.durationMs : attackLineFlashMs(), motionTracks);
+  }
+
   function renderAttack(event: PlaybackEvent, motionTracks: Map<string, MoveKeyframe[]>): void {
+    if (event.playbackBeam === 'heal') {
+      renderHeal(event, motionTracks);
+      return;
+    }
     const attackType = event.attackType ?? 'instant';
     if (attackType === 'line' || attackType === 'multi') {
       const flashMs = event.durationMs && event.durationMs > 0 ? event.durationMs : attackLineFlashMs();
@@ -395,9 +581,45 @@ export function createCombatArena(root: HTMLElement): CombatArena {
       renderAttack(event, motionTracks);
     }
 
+    if (event.kind === 'heal') {
+      applyHealFromEvent(event);
+      renderHeal(event, motionTracks);
+    }
+
     if (event.kind === 'death' && event.sourceUnitId) {
-      removeUnit(event.sourceUnitId);
-      motionTracks.delete(event.sourceUnitId);
+      const unitId = event.sourceUnitId;
+      motionTracks.delete(unitId);
+      if (!unitsById.has(unitId)) {
+        return;
+      }
+      animateUnitExit(unitId, () => removeUnit(unitId));
+    }
+
+    if (event.kind === 'spawn' && event.sourceUnitId) {
+      const rosterUnit = playbackRoster.find((unit) => unit.unitId === event.sourceUnitId);
+      if (!rosterUnit) {
+        return;
+      }
+      const unit: CombatUnit = {
+        ...rosterUnit,
+        x: event.x ?? rosterUnit.x,
+        y: event.y ?? rosterUnit.y,
+      };
+      cancelPresenceAnimation(unit.unitId);
+      unitsById.set(unit.unitId, unit);
+      const display = projectMotion(unit.x, unit.y, event.height ?? 0);
+      unitPresenceScale.set(unit.unitId, 0);
+      renderUnit(unit, false, display);
+      animateUnitEnter(unit.unitId);
+      motionTracks.set(unit.unitId, [
+        {
+          atMs: event.atMs,
+          x: unit.x,
+          y: unit.y,
+          height: event.height ?? 0,
+          movementType: unitCatalog().getUnitDefinition(unit.unitType).movementType,
+        },
+      ]);
     }
   }
 
@@ -406,6 +628,10 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     motionTracks: Map<string, MoveKeyframe[]>,
   ): void {
     for (const unit of unitsById.values()) {
+      if (exitingUnitIds.has(unit.unitId)) {
+        rerenderUnitAtLastDisplay(unit.unitId);
+        continue;
+      }
       const track = motionTracks.get(unit.unitId);
       if (!track) {
         renderUnit(unit, false, projectMotion(unit.x, unit.y, 0));
@@ -416,19 +642,31 @@ export function createCombatArena(root: HTMLElement): CombatArena {
     }
   }
 
-  function syncField(units: CombatUnit[]): void {
+  function syncField(units: CombatUnit[], options?: { animateEnter?: boolean }): void {
+    const previousIds = new Set(unitsById.keys());
     unitsById = new Map(units.map((unit) => [unit.unitId, { ...unit }]));
     const liveIds = new Set(unitsById.keys());
     for (const unitId of unitElements.keys()) {
       if (!liveIds.has(unitId)) {
+        cancelPresenceAnimation(unitId);
         unitElements.get(unitId)?.remove();
         unitElements.delete(unitId);
         unitPaths.delete(unitId);
+        unitUsesSprite.delete(unitId);
         unitVisualCache.delete(unitId);
+        unitPresenceScale.delete(unitId);
+        unitLastDisplay.delete(unitId);
       }
     }
+    const animateEnter = options?.animateEnter ?? true;
     for (const unit of unitsById.values()) {
+      const isNew = !previousIds.has(unit.unitId);
       renderUnit(unit, false, projectMotion(unit.x, unit.y, 0));
+      if (animateEnter && isNew) {
+        unitPresenceScale.set(unit.unitId, 0);
+        rerenderUnitAtLastDisplay(unit.unitId);
+        animateUnitEnter(unit.unitId);
+      }
     }
   }
 
@@ -458,14 +696,14 @@ export function createCombatArena(root: HTMLElement): CombatArena {
       playbackRoster = units.map((unit) => ({ ...unit }));
       const fightStartMs = options?.fightStartMs ?? playback[0]?.atMs ?? 0;
       const fightPlayback = sliceFightPlayback(playback, fightStartMs);
-      syncField(units);
+      syncField(units, { animateEnter: false });
       if (fightPlayback.length === 0) {
         finishPlayback();
         return Promise.resolve();
       }
 
       const startMs = fightStartMs;
-      const endMs = fightPlayback[fightPlayback.length - 1]!.atMs;
+      const endMs = fightPlaybackEndMs(fightPlayback, startMs);
       const span = Math.max(1, endMs - startMs);
       const wallStart = performance.now();
       const motionTracks = buildMotionTracks(units, fightPlayback, fightStartMs);
@@ -488,9 +726,10 @@ export function createCombatArena(root: HTMLElement): CombatArena {
           if (frameIndex >= fightPlayback.length && simMs >= endMs) {
             updateUnitMotionPositions(endMs, motionTracks);
             window.setTimeout(() => {
+              finalizePlaybackVisuals();
               finishPlayback();
               resolve();
-            }, attackLineFlashMs());
+            }, Math.max(attackLineFlashMs(), unitExitMs()));
             return;
           }
           window.requestAnimationFrame(step);
@@ -505,13 +744,20 @@ export function createCombatArena(root: HTMLElement): CombatArena {
         window.clearTimeout(timer);
       }
       attackLineTimers.clear();
+      for (const unitId of presenceAnimFrames.keys()) {
+        cancelPresenceAnimation(unitId);
+      }
+      exitingUnitIds.clear();
       playbackRoster = [];
       linesLayer.replaceChildren();
       unitElements.forEach((element) => element.remove());
       unitElements.clear();
       unitPaths.clear();
+      unitUsesSprite.clear();
       unitVisualCache.clear();
       unitVisualOffsets.clear();
+      unitPresenceScale.clear();
+      unitLastDisplay.clear();
       unitsById.clear();
     },
   };

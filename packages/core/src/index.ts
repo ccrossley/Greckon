@@ -4,6 +4,9 @@ export {
   generateBaseStats,
   getActionsForUnit,
   getAttackCooldownMs,
+  getFaction,
+  getFactionDisplayName,
+  getFactionIdForUnit,
   getMaxDamagePerTick,
   getStatBudget,
   getTurnUnitTypes,
@@ -11,7 +14,11 @@ export {
   getUnitDisplayName,
   getUnitIndex,
   getUnitRowPriority,
+  isValidFactionId,
+  listFactionIds,
+  listFactions,
   listUnitTypes,
+  listUnitTypesForFaction,
   scaleStatsForLevel,
   unitTypeFromIndex,
 } from './game-data/index.js';
@@ -37,6 +44,19 @@ export {
   availableDraftUnitTypes,
   isDraftUnitTypeAvailable,
 } from './combat/draft-pool.js';
+
+export {
+  executeAbility,
+  formatAbilityEffectsSummary,
+  getAbility,
+  getAbilityForUnit,
+  getEffectiveDefense,
+  getEffectiveSpeed,
+  isSupportAbility,
+  listAbilities,
+  resolveAbilityTargets,
+} from './combat/abilities/index.js';
+export type { Ability, AbilityId } from './combat/abilities/index.js';
 
 export {
   DEFAULT_FILL_COLOR,
@@ -65,6 +85,41 @@ export {
   UNIT_ICON_SIZE,
   UNIT_ICON_STROKE_WIDTH,
 } from './combat/unit-icon.js';
+
+export { createUnitSpriteGroup, mountUnitSpriteIcon } from './combat/unit-sprite-svg.js';
+export {
+  getUnitSprite,
+  getUnitSpriteDimensions,
+  getUnitSpriteDisplayBounds,
+  getUnitSpriteFitScale,
+  getUnitSpritePlacement,
+  getUnitSpriteUrl,
+  hasUnitSprite,
+  resolveUnitSpriteId,
+  UNIT_SPRITE_ATLAS,
+  UNIT_SPRITE_CANVAS_SIZE,
+  UNIT_SPRITE_CATALOG,
+} from './combat/unit-sprite.js';
+export type {
+  UnitSprite,
+  UnitSpriteDimensions,
+  UnitSpriteDisplayBounds,
+  UnitSpriteId,
+} from './combat/unit-sprite.js';
+/** @deprecated Use unit-sprite exports */
+export {
+  getPaperDollAtlasUrl,
+  getPaperDollDisplayBounds,
+  getPaperDollFitScale,
+  getPaperDollRig,
+  hasPaperDoll,
+  PAPER_DOLL_ATLAS,
+  PAPER_DOLL_CANVAS_SIZE,
+  PAPER_DOLL_RIGS,
+} from './combat/paper-doll.js';
+export type { PaperDollDisplayBounds, PaperDollRig, PaperDollRigId } from './combat/paper-doll.js';
+/** @deprecated Use createUnitSpriteGroup */
+export { createPaperDollGroup, mountPaperDollIcon } from './combat/paper-doll-svg.js';
 
 export {
   chunkUnitsIntoRows,
@@ -168,6 +223,7 @@ export type {
 } from './types/domain.js';
 
 export type { Unit } from './generated/units.js';
+export type { Faction, FactionId } from './generated/factions.js';
 
 export type { paths, components } from './generated/openapi.js';
 export type { LobbyClientMessage } from './generated/ws-lobby-client.js';

@@ -1,6 +1,8 @@
 import type { AttackType, MovementType, UnitType, UpgradeColorMod } from './combat-enums.js';
+import type { FactionId } from '../generated/factions.js';
 
 export type { AttackType, MovementType, UnitType, UpgradeColorMod } from './combat-enums.js';
+export type { FactionId } from '../generated/factions.js';
 export { MELEE_ATTACK_RANGE, RANGED_ATTACK_RANGE } from './combat-enums.js';
 
 export type PlayerId = string;
@@ -43,6 +45,14 @@ export interface ActionDefinition {
   requiresAlive: boolean;
 }
 
+export interface StatusEffect {
+  kind: string;
+  expiresAtMs: number;
+  magnitude: number;
+  /** Optional source unit for DoT attribution. */
+  sourceUnitId?: string;
+}
+
 export interface CombatUnit {
   unitId: string;
   unitType: UnitType;
@@ -63,6 +73,7 @@ export interface CombatUnit {
   travelTimeMs: number;
   movementType: MovementType;
   damage?: number;
+  statusEffects?: StatusEffect[];
 }
 
 export interface PlaybackEvent {
@@ -79,6 +90,9 @@ export interface PlaybackEvent {
   attackType?: AttackType;
   travelTimeMs?: number;
   damage?: number;
+  healAmount?: number;
+  playbackColor?: string;
+  playbackBeam?: 'damage' | 'heal';
   movementType?: MovementType;
   /** Display-only vertical offset (negative = hop/float up). */
   visualYOffset?: number;
@@ -126,7 +140,7 @@ export type NetworkMessage =
       type: 'MatchFound';
       matchId: string;
       combatWsUrl: string;
-      opponent: { playerId: string; username: string };
+      opponent: { playerId: string; username: string; factionId: FactionId };
     }
   | { type: 'ServerShutdown'; reason: string; reconnectAfterMs?: number }
   | { type: 'Ping' }
@@ -151,6 +165,7 @@ export type NetworkMessage =
   | {
       type: 'RequestAction';
       turnIndex: number;
+      pickIndex: number;
       deadlineMs: number;
       pickCount: number;
       availableActions: Array<{ unitId: string; actionId: string; label: string }>;
@@ -158,6 +173,7 @@ export type NetworkMessage =
   | {
       type: 'ActionSubmit';
       turnIndex: number;
+      pickIndex: number;
       actions: Array<{ unitId: string; actionId: string }>;
     }
   | {
@@ -190,7 +206,7 @@ export type NetworkMessage =
   | {
       type: 'AssignMatch';
       matchId: string;
-      players: Array<{ playerId: string; username: string; token: string }>;
+      players: Array<{ playerId: string; username: string; token: string; factionId: FactionId }>;
     }
   | { type: 'MatchComplete'; matchId: string; winnerPlayerId: PlayerId }
   | { type: 'LobbyDisconnected' };

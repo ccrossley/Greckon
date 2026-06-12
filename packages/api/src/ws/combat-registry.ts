@@ -40,6 +40,7 @@ export function assignMatchToCombatServer(matchId: MatchId, serverId: string): v
         playerId: player.playerId,
         username: player.username,
         token: player.token,
+        factionId: player.factionId,
       })),
     }),
   );

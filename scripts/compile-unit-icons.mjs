@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const unitsPath = join(root, 'data/units.json');
+const factionsPath = join(root, 'data/factions.json');
 const iconsDir = join(root, 'assets/unit-icons');
 const outputPath = join(root, 'packages/core/src/generated/unit-icons.ts');
 
@@ -55,13 +56,19 @@ async function loadIcon(slug) {
 }
 
 const units = JSON.parse(readFileSync(unitsPath, 'utf8'));
+const factions = JSON.parse(readFileSync(factionsPath, 'utf8'));
 const slugPaths = {};
 
-for (const unit of units) {
-  if (!unit.icon || typeof unit.icon !== 'string') {
-    throw new Error(`Unit ${unit.id} is missing required "icon" (game-icons slug)`);
+const iconSlugs = new Set([
+  ...units.map((unit) => unit.icon),
+  ...factions.map((faction) => faction.emblemIcon),
+]);
+
+for (const slug of iconSlugs) {
+  if (!slug || typeof slug !== 'string') {
+    throw new Error('Invalid icon slug in unit/faction catalog');
   }
-  slugPaths[unit.icon] = await loadIcon(unit.icon);
+  slugPaths[slug] = await loadIcon(slug);
 }
 
 mkdirSync(iconsDir, { recursive: true });

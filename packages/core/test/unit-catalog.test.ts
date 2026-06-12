@@ -4,8 +4,8 @@ import { getUnitDefinition, getUnitDisplayName, listUnitTypes } from '../src/gam
 
 describe('unit catalog', () => {
   it('loads all 12 units', () => {
-    expect(UNITS).toHaveLength(12);
-    expect(listUnitTypes()).toHaveLength(12);
+    expect(UNITS).toHaveLength(36);
+    expect(listUnitTypes()).toHaveLength(36);
   });
 
   it('maps JSON fields into runtime definitions', () => {

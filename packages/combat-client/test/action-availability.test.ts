@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runActionPhase } from '../src/combat/action-phase.js';
 
 describe('action phase', () => {
-  it('picks up to the configured number of squad actions', async () => {
+  it('picks one squad action per step', async () => {
     const actions = await runActionPhase(
       [
         { unitId: 'squad', actionId: 'upgrade:warrior', label: 'Upgrade Warrior' },
@@ -12,9 +12,9 @@ describe('action phase', () => {
       1000,
       0,
       'bot-player',
-      3,
+      1,
     );
-    expect(actions).toHaveLength(3);
-    expect(actions[0]).toEqual({ unitId: 'squad', actionId: 'upgrade:warrior' });
+    expect(actions).toHaveLength(1);
+    expect(actions[0]?.unitId).toBe('squad');
   });
 });

@@ -65,6 +65,12 @@ export interface CombatTuningConfig {
       /** Extra icon scale at full charge (added to 1). */
       iconSpeedScale: number;
     };
+    unitPresence: {
+      /** Scale-in duration when a unit enters the field. */
+      enterMs: number;
+      /** Scale-out duration when a unit is defeated. */
+      exitMs: number;
+    };
   };
   playground: {
     /** Idle ms before playground march loop. */
@@ -163,6 +169,10 @@ export const DEFAULT_COMBAT_TUNING: CombatTuningConfig = {
     },
     charge: {
       iconSpeedScale: 0.12,
+    },
+    unitPresence: {
+      enterMs: 350,
+      exitMs: 350,
     },
   },
   playground: {

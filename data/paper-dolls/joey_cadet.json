@@ -1,0 +1,11 @@
+{
+  "id": "joey_cadet",
+  "unitId": "joey_cadet",
+  "canvasSize": 512,
+  "sprite": "joey_cadet.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a small cute Joey Cadet squire blob with tail, grey fur, round ears, stubby paws, koala features, accent #a8a29e"
+}

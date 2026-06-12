@@ -1,0 +1,11 @@
+{
+  "id": "depth_oracle",
+  "unitId": "depth_oracle",
+  "canvasSize": 512,
+  "sprite": "depth_oracle.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Depth Oracle mystic oracle spirit with glowing third eye, green spotted frog skin, webbed hands, amphibian features, accent #22d3ee"
+}

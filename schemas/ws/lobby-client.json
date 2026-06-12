@@ -21,11 +21,12 @@
     },
     "Opponent": {
       "type": "object",
-      "required": ["playerId", "username"],
+      "required": ["playerId", "username", "factionId"],
       "additionalProperties": false,
       "properties": {
         "playerId": { "type": "string" },
-        "username": { "type": "string" }
+        "username": { "type": "string" },
+        "factionId": { "type": "string" }
       }
     },
     "MatchFound": {

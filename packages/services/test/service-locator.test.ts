@@ -29,6 +29,6 @@ describe('ServiceLocator', () => {
     registerUnitCatalog(locator, AppPart.Web);
     setAppServices(locator, AppPart.Web);
     const catalog = resolveService<UnitCatalog>(ServiceTokens.UnitCatalog);
-    expect(catalog.listUnitTypes()).toHaveLength(12);
+    expect(catalog.listUnitTypes()).toHaveLength(36);
   });
 });

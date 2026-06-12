@@ -239,6 +239,26 @@ export function findEnemyInRange(
   return findEnemiesInRange(unit, units, attackRange)[0] ?? null;
 }
 
+export function applyKnockback(
+  world: PhysicsWorld,
+  attacker: CombatUnit,
+  target: CombatUnit,
+  strength: number,
+): void {
+  const tuning = getCombatTuning().physics;
+  const scale = tuning.fieldScale;
+  const state = world.getBodyState(target.unitId);
+  if (!state) {
+    return;
+  }
+  const dx = (target.x - attacker.x) * scale;
+  const dz = (target.y - attacker.y) * scale;
+  const len = Math.hypot(dx, dz) || 1;
+  const mass = state.body.mass();
+  const impulse = tuning.hopImpulseForward * strength * mass;
+  applyImpulse(world, target.unitId, (dx / len) * impulse, 0, (dz / len) * impulse);
+}
+
 export function applyHoldSeparationForces(
   world: PhysicsWorld,
   unit: CombatUnit,

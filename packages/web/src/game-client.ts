@@ -1,4 +1,4 @@
-import { getUnitDisplayName, loadGameConfig, type CombatUnit, type NetworkMessage, type UnitType } from '@greckon/core';
+import { getFactionDisplayName, getUnitDisplayName, loadGameConfig, type CombatUnit, type FactionId, type NetworkMessage, type UnitType } from '@greckon/core';
 import { BrowserWsClient } from './ws-client.js';
 import type { GameUi } from './ui.js';
 
@@ -29,37 +29,40 @@ export class GameClient {
     this.ui.log(`Signing in as ${username}…`);
 
     const session = await this.login(username);
+    this.ui.setScreen('faction_select');
+    const factionId = await this.ui.pickFaction();
     this.ui.setScreen('lobby');
-    this.ui.log('Joined queue — connecting to lobby…');
+    this.ui.log(`Joining queue as ${getFactionDisplayName(factionId)}…`);
 
-    const lobby = await this.joinLobby(session.token);
+    const lobby = await this.joinLobby(session.token, factionId);
     const lobbyWs = new BrowserWsClient();
 
-    const matchPromise = new Promise<{ combatWsUrl: string; opponent: string }>((resolve, reject) => {
+    const matchPromise = new Promise<{ combatWsUrl: string; opponent: string; opponentFaction: string }>((resolve, reject) => {
       lobbyWs.onMessage((message) => {
         if (message.type === 'MatchFound') {
           resolve({
             combatWsUrl: message.combatWsUrl,
             opponent: message.opponent.username,
+            opponentFaction: getFactionDisplayName(message.opponent.factionId),
           });
         }
         if (message.type === 'ServerShutdown') {
           reject(new Error(message.reason));
         }
         if (message.type === 'QueueUpdate') {
-          this.ui.showLobbyQueue(message.queuePosition);
+          this.ui.showLobbyQueue(message.queuePosition, factionId);
         }
       });
     });
 
     await lobbyWs.connect(lobby.lobbyWsUrl, session.token);
-    this.ui.showLobbyQueue(lobby.queuePosition);
+    this.ui.showLobbyQueue(lobby.queuePosition, factionId);
     this.ui.log('Connected — waiting for opponent…');
 
     try {
-      const { combatWsUrl, opponent } = await matchPromise;
+      const { combatWsUrl, opponent, opponentFaction } = await matchPromise;
       lobbyWs.disconnect();
-      this.ui.log(`Matched vs ${opponent}`);
+      this.ui.log(`Matched vs ${opponent} (${opponentFaction})`);
       await this.runCombat(combatWsUrl, session.token, session.playerId);
       this.ui.setScreen('lobby');
       this.ui.showPlayAgain(username);
@@ -83,10 +86,14 @@ export class GameClient {
     return (await response.json()) as { token: string; playerId: string; username: string };
   }
 
-  private async joinLobby(token: string) {
+  private async joinLobby(token: string, factionId: FactionId) {
     const response = await fetch(`${this.apiBase}/lobby/join`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ factionId }),
     });
     if (!response.ok) {
       throw new Error(`Join lobby failed (${response.status})`);
@@ -295,11 +302,13 @@ export class GameClient {
         actionRequest.turnIndex,
         playerId,
         this.fieldUnits,
+        actionRequest.pickIndex,
         actionRequest.pickCount,
       );
       combatWs.send({
         type: 'ActionSubmit',
         turnIndex: actionRequest.turnIndex,
+        pickIndex: actionRequest.pickIndex,
         actions,
       });
 

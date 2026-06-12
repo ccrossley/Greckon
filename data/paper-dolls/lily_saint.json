@@ -1,0 +1,11 @@
+{
+  "id": "lily_saint",
+  "unitId": "lily_saint",
+  "canvasSize": 512,
+  "sprite": "lily_saint.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Lily Saint holy paladin in armor with shield and sword, green spotted frog skin, webbed hands, amphibian features, accent #fde68a"
+}

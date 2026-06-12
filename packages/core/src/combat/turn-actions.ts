@@ -142,6 +142,7 @@ export function buildPlayerTurnActions(
   units: CombatUnit[],
   draftUnitTypes: UnitType[],
   offerCount = loadGameConfig().roundActionOfferCount,
+  pickStep = 1,
 ): TurnActionOffer[] {
   const candidateTypes = [...new Set(draftUnitTypes)];
   const candidates: Array<{ kind: TurnActionKind; unitType: UnitType }> = [];
@@ -162,7 +163,7 @@ export function buildPlayerTurnActions(
   const offers = pickWeightedActionCandidates(
     unique,
     Math.min(offerCount, unique.length),
-    hashSeed('offer', turnIndex, playerId),
+    hashSeed('offer', turnIndex, playerId, pickStep),
   );
 
   return offers.map(({ kind, unitType }) => ({

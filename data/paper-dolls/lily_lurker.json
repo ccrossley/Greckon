@@ -1,0 +1,11 @@
+{
+  "id": "lily_lurker",
+  "unitId": "lily_lurker",
+  "canvasSize": 512,
+  "sprite": "lily_lurker.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Lily Lurker rogue with hooded cloak and dagger, green spotted frog skin, webbed hands, amphibian features, accent #059669"
+}

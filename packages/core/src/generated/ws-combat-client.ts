@@ -72,9 +72,17 @@ export interface UnitPick {
 export interface RequestAction {
   type: "RequestAction";
   turnIndex: number;
+  pickIndex: number;
   deadlineMs: number;
   pickCount: number;
-  availableActions: AvailableAction[];
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  availableActions:
+    | [AvailableAction]
+    | [AvailableAction, AvailableAction]
+    | [AvailableAction, AvailableAction, AvailableAction];
 }
 export interface AvailableAction {
   unitId: string;
@@ -84,11 +92,12 @@ export interface AvailableAction {
 export interface ActionSubmit {
   type: "ActionSubmit";
   turnIndex: number;
+  pickIndex: number;
   /**
    * @minItems 1
-   * @maxItems 3
+   * @maxItems 1
    */
-  actions: [ActionInput] | [ActionInput, ActionInput] | [ActionInput, ActionInput, ActionInput];
+  actions: [ActionInput];
 }
 export interface ActionInput {
   unitId: string;

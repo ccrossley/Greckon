@@ -1,0 +1,11 @@
+{
+  "id": "dreamweaver",
+  "unitId": "dreamweaver",
+  "canvasSize": 512,
+  "sprite": "dreamweaver.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a koala mage in purple robe with wizard hat and crystal staff, grey fur round ears, accent #c4b5fd"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "the_croak-batch-1",
+  "factionId": "the_croak",
+  "unitIds": [
+    "pond_mender",
+    "tadpole_squire",
+    "bog_caller"
+  ],
+  "model": "google/nano-banana-2/edit",
+  "prompt": "Show three separate characters side by side: a Pond Mender healing spirit oracle with glowing eyes, green spotted frog skin, webbed hands, amphibian features, accent #2dd4bf; a small cute Tadpole Squire squire blob with tail, green spotted frog skin, webbed hands, amphibian features, accent #94a3b8; and a Bog Caller mage in robe with wizard hat and magical staff, green spotted frog skin, webbed hands, amphibian features, accent #7c3aed. All three are spaced out horizontally and not overlapping. Neutral stance.\n\nStyle needs to match the style, perspective, tone and image size of the attached images. Images are designed for simple movements like paper dolls.",
+  "styleReferences": [
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Assassin L.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Kingclops L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Parasite3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Plant3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Slimer1 L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Snail.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Sniper L_2.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Spartan L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Turtle L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Wizard L_1.png"
+  ]
+}

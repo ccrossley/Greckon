@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greckon.dev/schemas/factions/factions.schema.json",
+  "title": "FactionCatalog",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "#/$defs/FactionDefinition" },
+  "$defs": {
+    "FactionDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "tagline", "emblemIcon", "accentColor"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tagline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "emblemIcon": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Game-icons.net slug for faction emblem"
+        },
+        "accentColor": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      }
+    }
+  }
+}

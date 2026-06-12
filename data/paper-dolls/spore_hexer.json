@@ -1,0 +1,11 @@
+{
+  "id": "spore_hexer",
+  "unitId": "spore_hexer",
+  "canvasSize": 512,
+  "sprite": "spore_hexer.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Spore Hexer dark warlock in hooded robe with staff, grey fur, round ears, stubby paws, koala features, accent #a855f7"
+}

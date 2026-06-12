@@ -1,0 +1,11 @@
+{
+  "id": "tadpole_squire",
+  "unitId": "tadpole_squire",
+  "canvasSize": 512,
+  "sprite": "tadpole_squire.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a small cute Tadpole Squire squire blob with tail, green spotted frog skin, webbed hands, amphibian features, accent #94a3b8"
+}

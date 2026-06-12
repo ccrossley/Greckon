@@ -14,7 +14,7 @@ describe('lobby', () => {
     const auth = createAuthService();
     const lobby = createLobbyService();
     const session = await auth.login('alice');
-    const result = await lobby.join(session.playerId, session.token);
+    const result = await lobby.join(session.playerId, session.token, 'genoc_fantasy');
     expect(result.queuePosition).toBeGreaterThanOrEqual(1);
     expect(result.lobbyWsUrl).toMatch(/^ws/);
   });
@@ -24,7 +24,7 @@ describe('lobby', () => {
     const auth = createAuthService();
     const lobby = createLobbyService();
     const session = await auth.login('alice');
-    await lobby.join(session.playerId, session.token);
+    await lobby.join(session.playerId, session.token, 'genoc_fantasy');
     expect(matchmakeWithBot()).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe('lobby', () => {
     const auth = createAuthService();
     const lobby = createLobbyService();
     const session = await auth.login('alice');
-    await lobby.join(session.playerId, session.token);
+    await lobby.join(session.playerId, session.token, 'genoc_fantasy');
     markPlayerConnected(session.playerId);
     const matchId = matchmakeWithBot();
     expect(matchId).toBeTruthy();
@@ -41,7 +41,7 @@ describe('lobby', () => {
     finishMatch(matchId!);
     expect(getMatch(matchId!)).toBeUndefined();
 
-    const again = await lobby.join(session.playerId, session.token);
+    const again = await lobby.join(session.playerId, session.token, 'the_croak');
     expect(again.queuePosition).toBeGreaterThanOrEqual(1);
     markPlayerConnected(session.playerId);
     expect(matchmakeWithBot()).toBeTruthy();
@@ -52,7 +52,7 @@ describe('lobby', () => {
     const auth = createAuthService();
     const lobby = createLobbyService();
     const session = await auth.login('alice');
-    await lobby.join(session.playerId, session.token);
+    await lobby.join(session.playerId, session.token, 'genoc_fantasy');
     markPlayerConnected(session.playerId);
     const matchId = matchmakeWithBot();
     expect(matchId).toBeTruthy();

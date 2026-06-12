@@ -16,7 +16,7 @@ import {
 
 describe('combat stats', () => {
   it('lists 12 unit types', () => {
-    expect(listUnitTypes()).toHaveLength(12);
+    expect(listUnitTypes()).toHaveLength(36);
   });
 
   it('gives every unit a themed name', () => {
@@ -84,11 +84,19 @@ describe('turn actions', () => {
 
   const draft: UnitType[] = ['warrior', 'mage', 'archer'];
 
-  it('offers exactly three weighted action choices', () => {
-    const offers = buildPlayerTurnActions(0, playerId, units, draft);
+  it('offers exactly three weighted action choices per pick step', () => {
+    const offers = buildPlayerTurnActions(0, playerId, units, draft, 3, 1);
     expect(offers).toHaveLength(3);
     expect(new Set(offers.map((offer) => offer.actionId)).size).toBe(3);
     expect(offers.every((offer) => parseTurnActionId(offer.actionId))).toBe(true);
+  });
+
+  it('rolls different action offers on each pick step', () => {
+    const step1 = buildPlayerTurnActions(0, playerId, units, draft, 3, 1).map((offer) => offer.actionId);
+    const step2 = buildPlayerTurnActions(0, playerId, units, draft, 3, 2).map((offer) => offer.actionId);
+    const step3 = buildPlayerTurnActions(0, playerId, units, draft, 3, 3).map((offer) => offer.actionId);
+    const allSteps = [...step1, ...step2, ...step3];
+    expect(new Set(allSteps).size).toBeGreaterThan(3);
   });
 
   it('weights add more often than double across turns', () => {

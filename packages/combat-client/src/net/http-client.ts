@@ -1,8 +1,8 @@
-import type { PlayerId } from '@greckon/core';
+import type { FactionId, PlayerId } from '@greckon/core';
 
 export interface HttpClient {
   login(username: string): Promise<{ token: string; playerId: PlayerId; username: string }>;
-  joinLobby(token: string): Promise<{ lobbyWsUrl: string; queuePosition: number }>;
+  joinLobby(token: string, factionId: FactionId): Promise<{ lobbyWsUrl: string; queuePosition: number }>;
 }
 
 export function createHttpClient(baseUrl: string): HttpClient {
@@ -22,10 +22,14 @@ export function createHttpClient(baseUrl: string): HttpClient {
         username: string;
       };
     },
-    async joinLobby(token) {
+    async joinLobby(token, factionId) {
       const response = await fetch(`${baseUrl}/lobby/join`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ factionId }),
       });
       if (!response.ok) {
         throw new Error(`join lobby failed: ${response.status}`);

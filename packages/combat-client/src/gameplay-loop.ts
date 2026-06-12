@@ -20,7 +20,7 @@ export async function runGameplayLoop(
   machine.setScreen('login');
   const session = await http.login(username);
   machine.setScreen('lobby');
-  const lobby = await http.joinLobby(session.token);
+  const lobby = await http.joinLobby(session.token, 'genoc_fantasy');
   console.log(`[client] waiting in lobby (queue ${lobby.queuePosition}) — match starts when connected`);
 
   const matchPromise = new Promise<{ combatWsUrl: string }>((resolve, reject) => {

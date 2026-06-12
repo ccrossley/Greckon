@@ -29,6 +29,7 @@ export interface PlayerRef {
   playerId: string;
   username: string;
   token: string;
+  factionId: string;
 }
 export interface MatchComplete {
   type: "MatchComplete";

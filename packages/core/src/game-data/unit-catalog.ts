@@ -1,4 +1,5 @@
 import type { UnitDefinition, UnitType, UpgradeColorMod } from '../types/domain.js';
+import type { FactionId } from '../generated/factions.js';
 import { UNITS, UNIT_CATALOG, type Unit } from '../generated/units.js';
 
 function toUnitDefinition(unit: Unit): UnitDefinition {
@@ -49,4 +50,16 @@ export function getUnitDisplayName(unitType: UnitType): string {
 
 export function listUnitTypes(): UnitType[] {
   return UNITS.map((unit) => unit.id);
+}
+
+export function listUnitTypesForFaction(factionId: FactionId): UnitType[] {
+  return UNITS.filter((unit) => unit.factionId === factionId).map((unit) => unit.id);
+}
+
+export function getFactionIdForUnit(unitType: UnitType): FactionId {
+  const unit = UNIT_CATALOG[unitType];
+  if (!unit) {
+    throw new Error(`Unknown unit type: ${unitType}`);
+  }
+  return unit.factionId;
 }

@@ -75,6 +75,12 @@ paths:
       summary: Join the matchmaking queue
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinLobbyRequest'
       responses:
         '200':
           description: Joined lobby queue
@@ -165,6 +171,15 @@ components:
           type: string
         username:
           type: string
+
+    JoinLobbyRequest:
+      type: object
+      required:
+        - factionId
+      properties:
+        factionId:
+          type: string
+          minLength: 1
 
     JoinLobbyResponse:
       type: object

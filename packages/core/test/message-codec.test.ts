@@ -11,7 +11,7 @@ const sampleMessages: NetworkMessage[] = [
     type: 'MatchFound',
     matchId: 'match-1',
     combatWsUrl: 'ws://localhost:4001',
-    opponent: { playerId: 'p2', username: 'bob' },
+    opponent: { playerId: 'p2', username: 'bob', factionId: 'genoc_fantasy' },
   },
   { type: 'ServerShutdown', reason: 'maintenance', reconnectAfterMs: 5000 },
   { type: 'Ping' },
@@ -27,12 +27,15 @@ const sampleMessages: NetworkMessage[] = [
   {
     type: 'RequestAction',
     turnIndex: 0,
+    pickIndex: 1,
     deadlineMs: 10000,
+    pickCount: 3,
     availableActions: [{ unitId: 'squad', actionId: 'upgrade:warrior', label: 'Upgrade Warrior' }],
   },
   {
     type: 'ActionSubmit',
     turnIndex: 0,
+    pickIndex: 1,
     actions: [{ unitId: 'squad', actionId: 'upgrade:warrior' }],
   },
   {

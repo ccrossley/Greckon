@@ -1,0 +1,11 @@
+{
+  "id": "ripple_scout",
+  "unitId": "ripple_scout",
+  "canvasSize": 512,
+  "sprite": "ripple_scout.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Ripple Scout scout with cap and rifle, green spotted frog skin, webbed hands, amphibian features, accent #facc15"
+}

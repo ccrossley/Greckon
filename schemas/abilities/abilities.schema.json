@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greckon.dev/schemas/abilities/abilities.schema.json",
+  "title": "AbilityCatalog",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "#/$defs/AbilityDefinition" },
+  "$defs": {
+    "TargetingMode": {
+      "type": "string",
+      "enum": [
+        "nearest_enemy_in_range",
+        "all_enemies_in_range",
+        "lowest_hp_ally_in_range",
+        "nearest_enemy_in_range_prefer_wounded",
+        "primary_plus_adjacent_enemies",
+        "volley_enemies"
+      ]
+    },
+    "EffectKind": {
+      "type": "string",
+      "enum": [
+        "damage",
+        "heal",
+        "pierce",
+        "execute",
+        "lifesteal",
+        "cleave",
+        "volley",
+        "frenzy",
+        "spore_dot",
+        "slow",
+        "knockback",
+        "ally_shield",
+        "self_shield"
+      ]
+    },
+    "AbilityEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/EffectKind" },
+        "scale": { "type": "number", "minimum": 0 },
+        "fraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "amount": { "type": "number" },
+        "count": { "type": "integer", "minimum": 1 },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "strength": { "type": "number", "minimum": 0 }
+      }
+    },
+    "AbilityPlayback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["beam"],
+      "properties": {
+        "beam": { "type": "string", "enum": ["damage", "heal"] },
+        "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "AbilityDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "targeting", "effects", "playback"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "targeting": { "$ref": "#/$defs/TargetingMode" },
+        "rangeBonus": { "type": "number", "minimum": 0, "maximum": 0.5 },
+        "volleyCount": { "type": "integer", "minimum": 2, "maximum": 4 },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/AbilityEffect" }
+        },
+        "playback": { "$ref": "#/$defs/AbilityPlayback" }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import type { CombatUnit, PlayerId, UnitType } from '../types/domain.js';
 import type { ActionDefinition } from '../types/domain.js';
-import { getUnitDefinition, getUnitDisplayName, listUnitTypes } from './unit-catalog.js';
+import { getUnitDefinition, getUnitDisplayName, getFactionIdForUnit, listUnitTypes, listUnitTypesForFaction } from './unit-catalog.js';
 import {
   getUnitIndex,
   getUnitRowPriority,
@@ -13,7 +13,16 @@ export function getActionsForUnit(unitType: UnitType, alive: boolean): ActionDef
   return unit.actions.filter((action) => !action.requiresAlive || alive);
 }
 
-export { getUnitDefinition, getUnitDisplayName, listUnitTypes };
+export { getUnitDefinition, getUnitDisplayName, getFactionIdForUnit, listUnitTypes, listUnitTypesForFaction };
+
+export {
+  getFaction,
+  getFactionDisplayName,
+  isValidFactionId,
+  listFactionIds,
+  listFactions,
+} from './faction-catalog.js';
+export type { Faction, FactionId } from './faction-catalog.js';
 
 export function createCombatUnit(
   unitId: string,
@@ -54,6 +63,7 @@ export function createCombatUnit(
     travelTimeMs: definition.travelTimeMs,
     movementType: definition.movementType,
     damage: definition.damage,
+    statusEffects: [],
   };
 }
 

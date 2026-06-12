@@ -22,14 +22,17 @@ function sendJson(res: import('node:http').ServerResponse, status: number, body:
 }
 
 export function unitsApiPlugin(): Plugin {
-  let unitData: Awaited<ReturnType<typeof createUnitDataServer>> | null = null;
+  let unitDataPromise: ReturnType<typeof createUnitDataServer> | null = null;
+
+  const getUnitData = () => {
+    unitDataPromise ??= createUnitDataServer({ repoRoot });
+    return unitDataPromise;
+  };
 
   return {
     name: 'units-api',
     configureServer(server) {
-      void createUnitDataServer({ repoRoot }).then((service) => {
-        unitData = service;
-      });
+      void getUnitData();
 
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/api/units')) {
@@ -43,8 +46,12 @@ export function unitsApiPlugin(): Plugin {
           return;
         }
 
-        if (!unitData) {
-          unitData = await createUnitDataServer({ repoRoot });
+        let unitData: Awaited<ReturnType<typeof createUnitDataServer>>;
+        try {
+          unitData = await getUnitData();
+        } catch (error) {
+          sendJson(res, 500, { ok: false, errors: [String(error)] });
+          return;
         }
 
         if (req.method === 'GET') {

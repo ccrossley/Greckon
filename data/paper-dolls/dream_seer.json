@@ -1,0 +1,11 @@
+{
+  "id": "dream_seer",
+  "unitId": "dream_seer",
+  "canvasSize": 512,
+  "sprite": "dream_seer.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a koala mystic oracle spirit with glowing third eye and ethereal wisps, grey fur, accent #67e8f9"
+}

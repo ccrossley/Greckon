@@ -1,4 +1,4 @@
-import { listIconSlugs } from '@greckon/core';
+import { formatAbilityEffectsSummary, getAbility, listIconSlugs } from '@greckon/core';
 import type { AttackType, MovementType, UpgradeColorMod } from '../types.js';
 import { getSelectedUnit, state, subscribe, updateSelectedUnit } from '../state.js';
 import { createUnitPreview } from './unit-preview.js';
@@ -102,7 +102,13 @@ export function mountAppearanceTab(root: HTMLElement): void {
       ),
     );
 
+    const ability = getAbility(unit.abilityId);
+    const abilitySummary = document.createElement('p');
+    abilitySummary.className = 'muted ability-summary';
+    abilitySummary.textContent = `${ability.name} — ${formatAbilityEffectsSummary(ability)} (${ability.targeting})`;
+
     visualFields.replaceChildren(
+      abilitySummary,
       createField(
         'Fill color',
         (() => {

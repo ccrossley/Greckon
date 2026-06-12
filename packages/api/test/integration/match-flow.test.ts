@@ -9,7 +9,7 @@ describe('match flow integration', () => {
     const auth = createAuthService();
     const lobby = createLobbyService();
     const session = await auth.login('alice');
-    await lobby.join(session.playerId, session.token);
+    await lobby.join(session.playerId, session.token, 'koala_horde');
     markPlayerConnected(session.playerId);
 
     const handle = spawnCombatServer();

@@ -1,0 +1,11 @@
+{
+  "id": "scratch_fury",
+  "unitId": "scratch_fury",
+  "canvasSize": 512,
+  "sprite": "scratch_fury.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a bulky koala scratch fury berserker with claws and fierce cap, grey fur round ears, accent #dc2626"
+}

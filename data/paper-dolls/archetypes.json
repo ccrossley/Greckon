@@ -1,0 +1,73 @@
+{
+  "canvasSize": 512,
+  "anchor": [0.5, 0.92],
+  "nanoBananaModel": "google/nano-banana-2/edit",
+  "nanoBananaAspectRatio": "21:9",
+  "nanoBananaResolution": "1k",
+  "nanoBananaStyleSuffix": "Style needs to match the style, perspective, tone and image size of the attached images. Images are designed for simple movements like paper dolls.",
+  "styleReferenceDir": "/home/angwe/Documents/goodgriefgames/research/greckon unit test",
+  "factionAnatomy": {
+    "the_croak": "green spotted frog skin, webbed hands, amphibian features",
+    "koala_horde": "grey fur, round ears, stubby paws, koala features"
+  },
+  "bySides": {
+    "3": {
+      "archetypeId": "healer",
+      "scene": "a {unitName} healing spirit oracle with glowing eyes, {anatomy}, accent {fillColor}"
+    },
+    "4": {
+      "archetypeId": "squire",
+      "scene": "a small cute {unitName} squire blob with tail, {anatomy}, accent {fillColor}"
+    },
+    "5": {
+      "archetypeId": "mage",
+      "scene": "a {unitName} mage in robe with wizard hat and magical staff, {anatomy}, accent {fillColor}"
+    },
+    "6": {
+      "archetypeId": "rogue",
+      "scene": "a {unitName} rogue with hooded cloak and dagger, {anatomy}, accent {fillColor}"
+    },
+    "7": {
+      "archetypeId": "scout",
+      "scene": "a {unitName} scout with cap and rifle, {anatomy}, accent {fillColor}"
+    },
+    "8": {
+      "archetypeId": "knight",
+      "scene": "a {unitName} knight in plate armor with round shield and short sword, {anatomy}, accent {fillColor}"
+    },
+    "9": {
+      "archetypeId": "archer",
+      "scene": "a {unitName} archer with hat and ranged weapon, {anatomy}, accent {fillColor}"
+    },
+    "10": {
+      "archetypeId": "berserker",
+      "scene": "a bulky {unitName} berserker with fierce expression and claws, {anatomy}, accent {fillColor}"
+    },
+    "11": {
+      "archetypeId": "warlock",
+      "scene": "a {unitName} dark warlock in hooded robe with staff, {anatomy}, accent {fillColor}"
+    },
+    "12": {
+      "archetypeId": "paladin",
+      "scene": "a {unitName} holy paladin in armor with shield and sword, {anatomy}, accent {fillColor}"
+    },
+    "13": {
+      "archetypeId": "mystic",
+      "scene": "a {unitName} mystic oracle spirit with glowing third eye, {anatomy}, accent {fillColor}"
+    },
+    "14": {
+      "archetypeId": "warrior",
+      "scene": "a {unitName} champion warrior in armor with shield and greatsword, {anatomy}, accent {fillColor}"
+    }
+  },
+  "sceneOverrides": {
+    "marsh_tyrant": "a large toad tyrant with a tiny crown being carried by smaller frogs beneath him, green spotted frog skin, accent #f97316",
+    "bullfrog_knight": "a pac-man shaped bullfrog knight in plate armor with round shield and short sword, green spotted frog skin, accent #a3e635",
+    "tongue_archer": "a poison dart frog tongue archer with blowgun, green spotted frog skin, accent #34d399",
+    "rage_toad": "a large rage toad berserker with fierce expression and claws, green spotted frog skin, accent #ef4444",
+    "horde_champion": "a stocky koala horde champion in battle-worn armor with shield and greatsword, grey fur round ears, accent #ea580c",
+    "scratch_fury": "a bulky koala scratch fury berserker with claws and fierce cap, grey fur round ears, accent #dc2626",
+    "dream_seer": "a koala mystic oracle spirit with glowing third eye and ethereal wisps, grey fur, accent #67e8f9",
+    "dreamweaver": "a koala mage in purple robe with wizard hat and crystal staff, grey fur round ears, accent #c4b5fd"
+  }
+}

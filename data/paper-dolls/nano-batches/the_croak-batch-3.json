@@ -1,0 +1,23 @@
+{
+  "id": "the_croak-batch-3",
+  "factionId": "the_croak",
+  "unitIds": [
+    "tongue_archer",
+    "rage_toad",
+    "marsh_hexer"
+  ],
+  "model": "google/nano-banana-2/edit",
+  "prompt": "Show three separate characters side by side: a poison dart frog tongue archer with blowgun, green spotted frog skin, accent #34d399; a large rage toad berserker with fierce expression and claws, green spotted frog skin, accent #ef4444; and a Marsh Hexer dark warlock in hooded robe with staff, green spotted frog skin, webbed hands, amphibian features, accent #8b5cf6. All three are spaced out horizontally and not overlapping. Neutral stance.\n\nStyle needs to match the style, perspective, tone and image size of the attached images. Images are designed for simple movements like paper dolls.",
+  "styleReferences": [
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Assassin L.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Kingclops L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Parasite3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Plant3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Slimer1 L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Snail.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Sniper L_2.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Spartan L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Turtle L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Wizard L_1.png"
+  ]
+}

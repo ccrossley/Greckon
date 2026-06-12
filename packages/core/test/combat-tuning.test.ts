@@ -17,6 +17,8 @@ describe('combat tuning config', () => {
     expect(DEFAULT_COMBAT_TUNING.movement.hop.intervalMs).toBe(450);
     expect(DEFAULT_COMBAT_TUNING.movement.float.amplitude).toBe(0.011);
     expect(DEFAULT_COMBAT_TUNING.playback.hop.visualHeight).toBe(0.052);
+    expect(DEFAULT_COMBAT_TUNING.playback.unitPresence.enterMs).toBe(350);
+    expect(DEFAULT_COMBAT_TUNING.playback.unitPresence.exitMs).toBe(350);
     expect(maxSimMs()).toBe(50 * 1800);
     expect(simStepMs()).toBe(250);
   });

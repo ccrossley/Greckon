@@ -1,0 +1,11 @@
+{
+  "id": "bog_caller",
+  "unitId": "bog_caller",
+  "canvasSize": 512,
+  "sprite": "bog_caller.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Bog Caller mage in robe with wizard hat and magical staff, green spotted frog skin, webbed hands, amphibian features, accent #7c3aed"
+}

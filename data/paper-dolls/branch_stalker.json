@@ -1,0 +1,11 @@
+{
+  "id": "branch_stalker",
+  "unitId": "branch_stalker",
+  "canvasSize": 512,
+  "sprite": "branch_stalker.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Branch Stalker rogue with hooded cloak and dagger, grey fur, round ears, stubby paws, koala features, accent #78716c"
+}

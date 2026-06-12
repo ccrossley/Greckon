@@ -1,6 +1,8 @@
 import {
+  createUnitSpriteGroup,
   getHealthBorderColor,
   getUnitIconScale,
+  hasUnitSprite,
   MAX_UNIT_LEVEL,
   resolveUnitFillColor,
   UNIT_ICON_SIZE,
@@ -58,6 +60,28 @@ function appendScaledIcon(
   return group;
 }
 
+function appendScaledUnitSprite(
+  parent: SVGElement,
+  unitId: string,
+  cx: number,
+  cy: number,
+  visualRadius: number,
+): SVGGElement | null {
+  const sprite = createUnitSpriteGroup(unitId);
+  if (!sprite) {
+    return null;
+  }
+  const scale = getUnitIconScale(visualRadius);
+  const group = document.createElementNS(SVG_NS, 'g');
+  group.setAttribute(
+    'transform',
+    `translate(${cx} ${cy}) scale(${scale}) translate(${-UNIT_ICON_SIZE / 2} ${-UNIT_ICON_SIZE / 2})`,
+  );
+  group.appendChild(sprite);
+  parent.appendChild(group);
+  return group;
+}
+
 export function createUnitPreview(unit: EditorUnit): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'unit-preview';
@@ -75,7 +99,9 @@ export function createUnitPreview(unit: EditorUnit): HTMLElement {
   mainSvg.appendChild(rangeRing);
 
   const iconPath = resolveIconPath(unit);
-  if (iconPath) {
+  if (hasUnitSprite(unit.id)) {
+    appendScaledUnitSprite(mainSvg, unit.id, 100, 100, PREVIEW_RADIUS);
+  } else if (iconPath) {
     appendScaledIcon(
       mainSvg,
       iconPath,
@@ -117,7 +143,12 @@ export function createUnitPreview(unit: EditorUnit): HTMLElement {
     svg.setAttribute('viewBox', `0 0 ${UNIT_ICON_SIZE} ${UNIT_ICON_SIZE}`);
     svg.setAttribute('width', '40');
     svg.setAttribute('height', '40');
-    if (iconPath) {
+    if (hasUnitSprite(unit.id)) {
+      const sprite = createUnitSpriteGroup(unit.id);
+      if (sprite) {
+        svg.appendChild(sprite);
+      }
+    } else if (iconPath) {
       appendDirectIcon(
         svg,
         iconPath,

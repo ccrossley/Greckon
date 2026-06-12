@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { startEmbeddedCombat, type EmbeddedCombatHandle } from '@greckon/combat-server';
+import { isValidFactionId } from '@greckon/core';
 import type { ApiConfig, ApiServer } from '../index.js';
 import { createAuthService, getPlayerIdFromToken } from '../auth.js';
 import {
@@ -108,7 +109,12 @@ export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
           sendJson(res, 401, { error: 'unauthorized' });
           return;
         }
-        const result = await lobby.join(playerId, token);
+        const body = JSON.parse(await readBody(req)) as { factionId?: string };
+        if (!body.factionId || !isValidFactionId(body.factionId)) {
+          sendJson(res, 400, { error: 'bad_request', message: 'factionId required' });
+          return;
+        }
+        const result = await lobby.join(playerId, token, body.factionId);
         sendJson(res, 200, result);
         return;
       }
@@ -186,6 +192,7 @@ export async function createApiServer(config: ApiConfig): Promise<ApiServer> {
         opponent: {
           playerId: bot!.playerId,
           username: bot!.username,
+          factionId: bot!.factionId,
         },
       });
     }

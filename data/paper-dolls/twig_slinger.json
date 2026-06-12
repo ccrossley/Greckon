@@ -1,0 +1,11 @@
+{
+  "id": "twig_slinger",
+  "unitId": "twig_slinger",
+  "canvasSize": 512,
+  "sprite": "twig_slinger.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Twig Slinger archer with hat and ranged weapon, grey fur, round ears, stubby paws, koala features, accent #65a30d"
+}

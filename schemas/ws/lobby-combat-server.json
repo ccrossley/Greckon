@@ -12,12 +12,13 @@
   "$defs": {
     "PlayerRef": {
       "type": "object",
-      "required": ["playerId", "username", "token"],
+      "required": ["playerId", "username", "token", "factionId"],
       "additionalProperties": false,
       "properties": {
         "playerId": { "type": "string" },
         "username": { "type": "string" },
-        "token": { "type": "string" }
+        "token": { "type": "string" },
+        "factionId": { "type": "string" }
       }
     },
     "RegisterServer": {

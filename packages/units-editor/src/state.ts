@@ -1,3 +1,4 @@
+import { isValidFactionId, listFactions, type FactionId } from '@greckon/core';
 import type { EditorTab, EditorUnit, StatKey } from './types.js';
 
 export type StateListener = () => void;
@@ -5,6 +6,7 @@ export type StateListener = () => void;
 export interface EditorState {
   units: EditorUnit[];
   selectedIndex: number;
+  selectedFactionId: FactionId;
   activeTab: EditorTab;
   dirty: boolean;
   saving: boolean;
@@ -16,9 +18,12 @@ export interface EditorState {
 
 const listeners = new Set<StateListener>();
 
+const defaultFactionId = listFactions()[0]?.id ?? 'genoc_fantasy';
+
 export const state: EditorState = {
   units: [],
   selectedIndex: 0,
+  selectedFactionId: defaultFactionId,
   activeTab: 'appearance',
   dirty: false,
   saving: false,
@@ -42,8 +47,25 @@ export function notify(): void {
 export function setUnits(units: EditorUnit[]): void {
   state.units = units.map((unit) => ({ ...unit }));
   state.selectedIndex = Math.min(state.selectedIndex, Math.max(0, units.length - 1));
+  const selected = state.units[state.selectedIndex];
+  if (selected?.factionId && isValidFactionId(selected.factionId)) {
+    state.selectedFactionId = selected.factionId;
+  }
   state.dirty = false;
   state.saveError = null;
+  notify();
+}
+
+export function unitIndicesForFaction(factionId: FactionId): number[] {
+  return state.units.flatMap((unit, index) => (unit.factionId === factionId ? [index] : []));
+}
+
+export function setSelectedFaction(factionId: FactionId): void {
+  state.selectedFactionId = factionId;
+  const indices = unitIndicesForFaction(factionId);
+  if (indices.length > 0 && !indices.includes(state.selectedIndex)) {
+    state.selectedIndex = indices[0]!;
+  }
   notify();
 }
 
@@ -52,6 +74,10 @@ export function selectUnit(index: number): void {
     return;
   }
   state.selectedIndex = index;
+  const factionId = state.units[index]?.factionId;
+  if (factionId && isValidFactionId(factionId)) {
+    state.selectedFactionId = factionId;
+  }
   notify();
 }
 

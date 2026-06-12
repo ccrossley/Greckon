@@ -8,8 +8,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const generatedDir = join(root, 'packages/core/src/generated');
 
+execFileSync('node', [join(root, 'scripts/compile-factions.mjs')], { stdio: 'inherit', cwd: root });
+execFileSync('node', [join(root, 'scripts/compile-abilities.mjs')], { stdio: 'inherit', cwd: root });
 execFileSync('node', [join(root, 'scripts/compile-units.mjs')], { stdio: 'inherit', cwd: root });
 execFileSync('node', [join(root, 'scripts/compile-unit-icons.mjs')], {
+  stdio: 'inherit',
+  cwd: root,
+});
+execFileSync('node', [join(root, 'scripts/compile-paper-dolls.mjs')], {
   stdio: 'inherit',
   cwd: root,
 });

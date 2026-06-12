@@ -11,6 +11,8 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "abilityId",
+        "factionId",
         "name",
         "maxHp",
         "attack",
@@ -29,6 +31,16 @@
         "id": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "factionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Faction this unit belongs to"
+        },
+        "abilityId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Combat ability id (references abilities catalog)"
         },
         "name": {
           "type": "string",
@@ -66,6 +78,11 @@
           "type": "string",
           "enum": ["spectrum", "hue_shift", "lighten", "saturate"],
           "description": "How fill color evolves from level 1 to 4. Defaults to spectrum when omitted."
+        },
+        "paperDollId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Optional paper-doll rig id; when set, replaces the SVG icon in combat rendering."
         }
       }
     }

@@ -1,0 +1,11 @@
+{
+  "id": "marsh_hexer",
+  "unitId": "marsh_hexer",
+  "canvasSize": 512,
+  "sprite": "marsh_hexer.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Marsh Hexer dark warlock in hooded robe with staff, green spotted frog skin, webbed hands, amphibian features, accent #8b5cf6"
+}

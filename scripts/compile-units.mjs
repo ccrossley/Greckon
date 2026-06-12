@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const unitsPath = join(root, 'data/units.json');
+const factionsPath = join(root, 'data/factions.json');
+const abilitiesPath = join(root, 'data/abilities.json');
 const schemaPath = join(root, 'schemas/units/units.schema.json');
 const outputPath = join(root, 'packages/core/src/generated/units.ts');
 
@@ -35,6 +37,19 @@ if (ids.size !== units.length) {
 
 if (units.length === 0) {
   throw new Error(`No units defined in ${unitsPath}`);
+}
+
+const factions = JSON.parse(readFileSync(factionsPath, 'utf8'));
+const factionIds = new Set(factions.map((faction) => faction.id));
+const abilities = JSON.parse(readFileSync(abilitiesPath, 'utf8'));
+const abilityIds = new Set(abilities.map((ability) => ability.id));
+for (const unit of units) {
+  if (!factionIds.has(unit.factionId)) {
+    throw new Error(`Unit ${unit.id} references unknown factionId: ${unit.factionId}`);
+  }
+  if (!abilityIds.has(unit.abilityId)) {
+    throw new Error(`Unit ${unit.id} references unknown abilityId: ${unit.abilityId}`);
+  }
 }
 
 const serialized = JSON.stringify(units, null, 2);

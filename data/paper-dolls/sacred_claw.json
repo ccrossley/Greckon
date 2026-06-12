@@ -1,0 +1,11 @@
+{
+  "id": "sacred_claw",
+  "unitId": "sacred_claw",
+  "canvasSize": 512,
+  "sprite": "sacred_claw.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Sacred Claw holy paladin in armor with shield and sword, grey fur, round ears, stubby paws, koala features, accent #fde047"
+}

@@ -6,8 +6,8 @@ describe('match runner', () => {
   const assignment: MatchAssignment = {
     matchId: 'match-1',
     players: [
-      { playerId: 'p1', username: 'alice', token: 't1' },
-      { playerId: 'p2', username: 'bob', token: 't2' },
+      { playerId: 'p1', username: 'alice', token: 't1', factionId: 'genoc_fantasy' },
+      { playerId: 'p2', username: 'bob', token: 't2', factionId: 'genoc_fantasy' },
     ],
   };
 
@@ -26,14 +26,15 @@ describe('match runner', () => {
         }
         if (payload.type === 'RequestAction') {
           const available = payload.availableActions as Array<{ actionId: string; unitId: string }>;
-          const pickCount = (payload.pickCount as number | undefined) ?? 3;
+          const pick = available[0];
+          if (!pick) {
+            return;
+          }
           routeClientMessage(playerId, {
             type: 'ActionSubmit',
             turnIndex: payload.turnIndex,
-            actions: available.slice(0, pickCount).map((action) => ({
-              unitId: action.unitId,
-              actionId: action.actionId,
-            })),
+            pickIndex: payload.pickIndex,
+            actions: [{ unitId: pick.unitId, actionId: pick.actionId }],
           });
         }
       },

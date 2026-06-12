@@ -185,30 +185,34 @@
     },
     "RequestAction": {
       "type": "object",
-      "required": ["type", "turnIndex", "deadlineMs", "pickCount", "availableActions"],
+      "required": ["type", "turnIndex", "pickIndex", "deadlineMs", "pickCount", "availableActions"],
       "additionalProperties": false,
       "properties": {
         "type": { "const": "RequestAction" },
         "turnIndex": { "type": "integer", "minimum": 0 },
+        "pickIndex": { "type": "integer", "minimum": 1, "maximum": 3 },
         "deadlineMs": { "type": "integer", "minimum": 1 },
         "pickCount": { "type": "integer", "minimum": 1, "maximum": 3 },
         "availableActions": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
           "items": { "$ref": "#/$defs/AvailableAction" }
         }
       }
     },
     "ActionSubmit": {
       "type": "object",
-      "required": ["type", "turnIndex", "actions"],
+      "required": ["type", "turnIndex", "pickIndex", "actions"],
       "additionalProperties": false,
       "properties": {
         "type": { "const": "ActionSubmit" },
         "turnIndex": { "type": "integer", "minimum": 0 },
+        "pickIndex": { "type": "integer", "minimum": 1, "maximum": 3 },
         "actions": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 3,
+          "maxItems": 1,
           "items": { "$ref": "#/$defs/ActionInput" }
         }
       }

@@ -1,0 +1,11 @@
+{
+  "id": "canopy_scout",
+  "unitId": "canopy_scout",
+  "canvasSize": 512,
+  "sprite": "canopy_scout.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Canopy Scout scout with cap and rifle, grey fur, round ears, stubby paws, koala features, accent #fbbf24"
+}

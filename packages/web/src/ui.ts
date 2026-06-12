@@ -1,10 +1,15 @@
-import type { CombatUnit, NetworkMessage, PickPhase, UnitType } from '@greckon/core';
+import type { CombatUnit, FactionId, NetworkMessage, PickPhase, UnitType } from '@greckon/core';
 import {
+  getFactionDisplayName,
   getUnitDisplayName,
+  listFactions,
   MAX_UNIT_LEVEL,
   parseTurnActionId,
   pickBotTurnActions,
   pickRandomUnitType,
+  getIconPathBySlug,
+  UNIT_ICON_SIZE,
+  UNIT_ICON_STROKE_WIDTH,
 } from '@greckon/core';
 import type { CombatArena } from './combat-arena.js';
 import { mountCountdownBar } from './countdown-bar.js';
@@ -12,6 +17,7 @@ import { appendUnitButtonLabel } from './unit-icon.js';
 
 export type ScreenName =
   | 'login'
+  | 'faction_select'
   | 'lobby'
   | 'loading'
   | 'combat_secret_draft'
@@ -25,7 +31,8 @@ export interface GameUi {
   setScreen(screen: ScreenName, meta?: { round?: number; turnIndex?: number; pickIndex?: number }): void;
   log(message: string): void;
   wait(ms: number): Promise<void>;
-  showLobbyQueue(position: number): void;
+  pickFaction(): Promise<FactionId>;
+  showLobbyQueue(position: number, factionId: FactionId): void;
   showPlayAgain(username: string): void;
   showCombatField(units: CombatUnit[]): void;
   hideCombatField(): void;
@@ -46,7 +53,8 @@ export interface GameUi {
     turnIndex: number,
     playerId: string,
     fieldUnits: CombatUnit[],
-    pickCount?: number,
+    pickIndex: number,
+    pickCount: number,
   ): Promise<Array<{ unitId: string; actionId: string }>>;
   showPlayback(
     outcome: Extract<NetworkMessage, { type: 'TurnOutcome' }>,
@@ -92,29 +100,83 @@ export function createGameUi(
       return new Promise((resolve) => window.setTimeout(resolve, ms));
     },
 
-    showLobbyQueue(position) {
+    showLobbyQueue(position, factionId) {
       arena.hide();
       clearScreen();
+      const factionName = getFactionDisplayName(factionId);
       const panel = document.createElement('div');
       panel.className = 'panel';
       panel.innerHTML = `
         <h2>Lobby</h2>
-        <p class="lead">You are in queue position <strong>${position}</strong>.</p>
+        <p class="lead">Playing as <strong>${factionName}</strong> — queue position <strong>${position}</strong>.</p>
         <p class="muted">Match starts when you are connected and an opponent is ready.</p>
       `;
       root.appendChild(panel);
     },
 
+    pickFaction() {
+      arena.hide();
+      clearScreen();
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      panel.innerHTML = `
+        <h2>Choose your faction</h2>
+        <p class="muted">You will draft units only from this faction at the start of each match.</p>
+      `;
+      const grid = document.createElement('div');
+      grid.className = 'faction-grid';
+
+      return new Promise((resolve) => {
+        for (const faction of listFactions()) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'faction-card';
+          button.style.setProperty('--faction-accent', faction.accentColor);
+
+          const emblem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          emblem.setAttribute('class', 'faction-emblem');
+          emblem.setAttribute('width', '48');
+          emblem.setAttribute('height', '48');
+          emblem.setAttribute('viewBox', `0 0 ${UNIT_ICON_SIZE} ${UNIT_ICON_SIZE}`);
+          emblem.setAttribute('aria-hidden', 'true');
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', getIconPathBySlug(faction.emblemIcon));
+          path.setAttribute('fill', faction.accentColor);
+          path.setAttribute('stroke', '#0f1419');
+          path.setAttribute('stroke-width', String(UNIT_ICON_STROKE_WIDTH));
+          path.setAttribute('paint-order', 'stroke fill');
+          emblem.appendChild(path);
+
+          const name = document.createElement('span');
+          name.className = 'faction-name';
+          name.textContent = faction.name;
+
+          const tagline = document.createElement('span');
+          tagline.className = 'faction-tagline muted';
+          tagline.textContent = faction.tagline;
+
+          button.append(emblem, name, tagline);
+          button.addEventListener('click', () => {
+            log(`Selected faction ${faction.name}`);
+            resolve(faction.id);
+          });
+          grid.appendChild(button);
+        }
+        panel.appendChild(grid);
+        root.appendChild(panel);
+      });
+    },
+
     showPlayAgain(username) {
       arena.hide();
       clearScreen();
-      statusEl.textContent = 'lobby';
+      statusEl.textContent = 'faction select';
       const panel = document.createElement('div');
       panel.className = 'panel';
       panel.innerHTML = `<h2>Ready for another match?</h2>`;
       const button = document.createElement('button');
       button.className = 'primary';
-      button.textContent = 'Find match';
+      button.textContent = 'Choose faction';
       button.addEventListener('click', () => {
         window.dispatchEvent(new CustomEvent('greckon:play', { detail: { username } }));
       });
@@ -241,7 +303,7 @@ export function createGameUi(
       });
     },
 
-    pickActions(available, deadlineMs, turnIndex, playerId, fieldUnits, pickCount = 3) {
+    pickActions(available, deadlineMs, turnIndex, playerId, fieldUnits, pickIndex, pickCount) {
       clearScreen();
       combatOverlay.hidden = false;
       combatOverlay.classList.remove('combat-overlay-status');
@@ -250,18 +312,9 @@ export function createGameUi(
       panel.className = 'panel action-overlay-panel';
       const status = document.createElement('p');
       status.className = 'muted';
-      panel.innerHTML = `<h2>Select actions</h2>`;
+      panel.innerHTML = `<h2>Pick action ${pickIndex} of ${pickCount}</h2>`;
+      status.textContent = 'Choose one of the three actions below.';
       panel.appendChild(status);
-
-      const offerCount = available.length;
-      const updateStatus = (selectedCount: number) => {
-        if (offerCount <= pickCount) {
-          status.textContent = `Pick all ${pickCount} actions shown (${selectedCount}/${pickCount}).`;
-          return;
-        }
-        status.textContent = `Pick ${pickCount} actions (${selectedCount}/${pickCount} selected).`;
-      };
-      updateStatus(0);
 
       const stopCountdown = mountCountdownBar(panel, deadlineMs);
 
@@ -270,11 +323,9 @@ export function createGameUi(
 
       return new Promise((resolve) => {
         let settled = false;
-        const selected: Array<{ unitId: string; actionId: string; label: string }> = [];
 
         const finish = (
-          actions: Array<{ unitId: string; actionId: string }>,
-          label: string,
+          action: { unitId: string; actionId: string; label: string },
           auto = false,
         ) => {
           if (settled) {
@@ -288,29 +339,18 @@ export function createGameUi(
           for (const button of grid.querySelectorAll('button')) {
             (button as HTMLButtonElement).disabled = true;
           }
-          log(auto ? `Auto actions: ${label}` : `Actions: ${label}`);
-          resolve(actions);
+          log(auto ? `Auto-picked ${action.label}` : `Picked ${action.label}`);
+          resolve([{ unitId: action.unitId, actionId: action.actionId }]);
         };
 
         const deadlineTimer = window.setTimeout(() => {
-          const fallback = pickBotTurnActions(available, turnIndex, playerId, pickCount);
-          if (fallback.length > 0) {
-            finish(
-              fallback.map((action) => ({ unitId: action.unitId, actionId: action.actionId })),
-              fallback.map((action) => action.label).join(', '),
-              true,
-            );
+          const fallback = pickBotTurnActions(available, turnIndex, `${playerId}:${pickIndex}`, 1)[0];
+          if (fallback) {
+            finish(fallback, true);
+          } else if (available[0]) {
+            finish(available[0], true);
           }
         }, deadlineMs);
-
-        const syncButtons = () => {
-          for (const button of grid.querySelectorAll('button[data-action-id]')) {
-            const actionId = (button as HTMLButtonElement).dataset.actionId!;
-            const isSelected = selected.some((action) => action.actionId === actionId);
-            button.classList.toggle('selected', isSelected);
-          }
-          updateStatus(selected.length);
-        };
 
         for (const action of available) {
           const button = document.createElement('button');
@@ -333,25 +373,7 @@ export function createGameUi(
                   : currentLevel;
           }
           appendUnitButtonLabel(button, action.label, parsed?.unitType, displayLevel);
-          button.addEventListener('click', () => {
-            const existingIndex = selected.findIndex((pick) => pick.actionId === action.actionId);
-            if (existingIndex >= 0) {
-              selected.splice(existingIndex, 1);
-              syncButtons();
-              return;
-            }
-            if (selected.length >= pickCount) {
-              return;
-            }
-            selected.push(action);
-            syncButtons();
-            if (selected.length >= pickCount) {
-              finish(
-                selected.map((pick) => ({ unitId: pick.unitId, actionId: pick.actionId })),
-                selected.map((pick) => pick.label).join(', '),
-              );
-            }
-          });
+          button.addEventListener('click', () => finish(action));
           grid.appendChild(button);
         }
         panel.appendChild(grid);
@@ -434,7 +456,7 @@ export function showLoginForm(
   const button = document.createElement('button');
   button.type = 'submit';
   button.className = 'primary';
-  button.textContent = 'Enter lobby';
+  button.textContent = 'Continue';
 
   form.append(label, button);
   form.addEventListener('submit', (event) => {

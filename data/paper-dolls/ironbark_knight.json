@@ -1,0 +1,11 @@
+{
+  "id": "ironbark_knight",
+  "unitId": "ironbark_knight",
+  "canvasSize": 512,
+  "sprite": "ironbark_knight.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Ironbark Knight knight in plate armor with round shield and short sword, grey fur, round ears, stubby paws, koala features, accent #d6d3d1"
+}

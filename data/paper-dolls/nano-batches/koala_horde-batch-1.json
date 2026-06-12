@@ -1,0 +1,23 @@
+{
+  "id": "koala_horde-batch-1",
+  "factionId": "koala_horde",
+  "unitIds": [
+    "gumleaf_shaman",
+    "joey_cadet",
+    "dreamweaver"
+  ],
+  "model": "google/nano-banana-2/edit",
+  "prompt": "Show three separate characters side by side: a Gumleaf Shaman healing spirit oracle with glowing eyes, grey fur, round ears, stubby paws, koala features, accent #86efac; a small cute Joey Cadet squire blob with tail, grey fur, round ears, stubby paws, koala features, accent #a8a29e; and a koala mage in purple robe with wizard hat and crystal staff, grey fur round ears, accent #c4b5fd. All three are spaced out horizontally and not overlapping. Neutral stance.\n\nStyle needs to match the style, perspective, tone and image size of the attached images. Images are designed for simple movements like paper dolls.",
+  "styleReferences": [
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Assassin L.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Kingclops L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Parasite3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Plant3.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Slimer1 L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Snail.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Sniper L_2.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Spartan L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Turtle L_1.png",
+    "/home/angwe/Documents/goodgriefgames/research/greckon unit test/Sprite UnitThumbnail Wizard L_1.png"
+  ]
+}

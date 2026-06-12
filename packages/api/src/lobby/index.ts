@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { MatchId, PlayerId } from '@greckon/core';
+import type { FactionId, MatchId, PlayerId } from '@greckon/core';
+import { listFactionIds } from '@greckon/core';
 import { isPlayerConnected } from '../ws/lobby-socket.js';
 import { createBotSession } from '../auth.js';
 
@@ -9,6 +10,7 @@ export interface QueuedPlayer {
   playerId: PlayerId;
   token: string;
   username: string;
+  factionId: FactionId;
   isBot?: boolean;
 }
 
@@ -25,7 +27,11 @@ const playerQueueIndex = new Map<PlayerId, number>();
 const playerMatch = new Map<PlayerId, MatchId>();
 
 export interface LobbyService {
-  join(playerId: PlayerId, token: string): Promise<{ lobbyWsUrl: string; queuePosition: number }>;
+  join(
+    playerId: PlayerId,
+    token: string,
+    factionId: FactionId,
+  ): Promise<{ lobbyWsUrl: string; queuePosition: number }>;
   leave(playerId: PlayerId): Promise<void>;
   getStatus(playerId: PlayerId): Promise<{
     inQueue: boolean;
@@ -39,7 +45,7 @@ export function createLobbyService(
   getLobbyWsUrl: () => string = () => 'ws://localhost:3000/lobby',
 ): LobbyService {
   return {
-    async join(playerId, token) {
+    async join(playerId, token, factionId) {
       const { getSessionRecord } = await import('../auth.js');
       const session = getSessionRecord(playerId);
       if (!session) {
@@ -53,8 +59,12 @@ export function createLobbyService(
           playerMatch.delete(playerId);
         }
       }
-      if (!playerQueueIndex.has(playerId)) {
-        queue.push({ playerId, token, username: session.username });
+      const existing = queue.find((entry) => entry.playerId === playerId);
+      if (existing) {
+        existing.factionId = factionId;
+        existing.token = token;
+      } else {
+        queue.push({ playerId, token, username: session.username, factionId });
         queue.forEach((entry, index) => playerQueueIndex.set(entry.playerId, index + 1));
       }
       return {
@@ -105,10 +115,13 @@ export function matchmakeWithBot(): MatchId | null {
   queue.forEach((entry, idx) => playerQueueIndex.set(entry.playerId, idx + 1));
 
   const botSession = createBotSession(BOT_USERNAME);
+  const factions = listFactionIds();
+  const botFaction = factions[Math.floor(Math.random() * factions.length)]!;
   const bot: QueuedPlayer = {
     playerId: botSession.playerId,
     token: botSession.token,
     username: botSession.username,
+    factionId: botFaction,
     isBot: true,
   };
 

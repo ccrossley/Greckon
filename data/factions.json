@@ -1,0 +1,23 @@
+[
+  {
+    "id": "genoc_fantasy",
+    "name": "Genoc Fantasy",
+    "tagline": "Steel, spell, and sacred oaths.",
+    "emblemIcon": "castle",
+    "accentColor": "#94a3b8"
+  },
+  {
+    "id": "koala_horde",
+    "name": "Koala Horde",
+    "tagline": "The eucalyptus never sleeps.",
+    "emblemIcon": "bear-face",
+    "accentColor": "#84cc16"
+  },
+  {
+    "id": "the_croak",
+    "name": "The Croak",
+    "tagline": "From the marsh, an army rises.",
+    "emblemIcon": "frog",
+    "accentColor": "#2dd4bf"
+  }
+]

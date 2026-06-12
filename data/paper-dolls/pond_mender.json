@@ -1,0 +1,11 @@
+{
+  "id": "pond_mender",
+  "unitId": "pond_mender",
+  "canvasSize": 512,
+  "sprite": "pond_mender.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a Pond Mender healing spirit oracle with glowing eyes, green spotted frog skin, webbed hands, amphibian features, accent #2dd4bf"
+}

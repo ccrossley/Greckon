@@ -5,7 +5,7 @@ describe('unit definitions', () => {
   it('lists known unit types', () => {
     const types = listUnitTypes();
     expect(types).toContain('healer');
-    expect(types).toHaveLength(12);
+    expect(types).toHaveLength(36);
   });
 
   it('returns stats for a known unit type', () => {

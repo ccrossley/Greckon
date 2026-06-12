@@ -5,11 +5,12 @@ import {
   initRapier,
   isDraftUnitTypeAvailable,
   layoutAllFormations,
-  listUnitTypes,
+  listUnitTypesForFaction,
   loadGameConfig,
-  pickBotTurnActions,
+  pickBotTurnAction,
   pickRandomUnitType,
   type CombatUnit,
+  type FactionId,
   type MatchId,
   type PlayerId,
   type UnitType,
@@ -25,7 +26,7 @@ import { clearMessageInbox, waitForAllClientMessages } from '../ws/message-route
 
 export interface MatchAssignment {
   matchId: MatchId;
-  players: Array<{ playerId: PlayerId; username: string; token: string }>;
+  players: Array<{ playerId: PlayerId; username: string; token: string; factionId: FactionId }>;
 }
 
 export interface MatchResult {
@@ -72,11 +73,11 @@ async function runSecretDraftPhase(
   config: GameConfig,
   draftPool: Record<PlayerId, UnitType[]>,
 ): Promise<void> {
-  const unitTypes = listUnitTypes();
   const pickTimeoutMs = config.actionSelectionSeconds * 1000 + 500;
 
   for (let pickIndex = 1; pickIndex <= config.secretDraftPickCount; pickIndex++) {
     for (const player of assignment.players) {
+      const unitTypes = listUnitTypesForFaction(player.factionId);
       const available = availableDraftUnitTypes(unitTypes, draftPool[player.playerId]!);
       gateway.sendToPlayer(player.playerId, {
         type: 'RequestUnitPick',
@@ -101,10 +102,13 @@ async function runSecretDraftPhase(
       const player = assignment.players[index]!;
       const response = responses[index];
       const alreadyPicked = draftPool[player.playerId]!;
+      const unitTypes = listUnitTypesForFaction(player.factionId);
       const available = availableDraftUnitTypes(unitTypes, alreadyPicked);
       const submitted = response?.unitType as UnitType | undefined;
       const unitType =
-        submitted && isDraftUnitTypeAvailable(submitted, alreadyPicked)
+        submitted &&
+        isDraftUnitTypeAvailable(submitted, alreadyPicked) &&
+        unitTypes.includes(submitted)
           ? submitted
           : pickRandomUnitType(available, pickIndex, player.playerId);
       draftPool[player.playerId]!.push(unitType);
@@ -189,81 +193,85 @@ export async function runMatch(
     );
 
     const turnIndex = round - 1;
-    const turnInputs: TurnInput[] = [];
-    const actionsByPlayer = new Map<PlayerId, ReturnType<typeof buildPlayerTurnActions>>();
+    const collectedByPlayer = new Map<PlayerId, TurnInput['actions']>(
+      assignment.players.map((player) => [player.playerId, []]),
+    );
 
-    for (const player of assignment.players) {
-      const availableActions = buildPlayerTurnActions(
-        turnIndex,
-        player.playerId,
-        fieldUnits,
-        draftPool[player.playerId]!,
-        config.roundActionOfferCount,
-      );
-      actionsByPlayer.set(player.playerId, availableActions);
-      gateway.sendToPlayer(player.playerId, {
-        type: 'RequestAction',
-        turnIndex,
-        deadlineMs: config.turnWindowSeconds * 1000,
-        pickCount: config.roundActionPickCount,
-        availableActions,
-      });
-    }
+    for (let pickStep = 1; pickStep <= config.roundActionPickCount; pickStep++) {
+      const offersByPlayer = new Map<PlayerId, ReturnType<typeof buildPlayerTurnActions>>();
 
-    const actionTimeoutMs = config.turnWindowSeconds * 1000 + 500;
-    let responses: Record<string, unknown>[] = [];
-    try {
-      responses = await waitForAllClientMessages(
-        assignment.players.map((player) => ({ playerId: player.playerId, type: 'ActionSubmit' })),
-        actionTimeoutMs,
-      );
-    } catch {
-      responses = [];
-    }
+      for (const player of assignment.players) {
+        const availableActions = buildPlayerTurnActions(
+          turnIndex,
+          player.playerId,
+          fieldUnits,
+          draftPool[player.playerId]!,
+          config.roundActionOfferCount,
+          pickStep,
+        );
+        offersByPlayer.set(player.playerId, availableActions);
+        gateway.sendToPlayer(player.playerId, {
+          type: 'RequestAction',
+          turnIndex,
+          pickIndex: pickStep,
+          deadlineMs: config.turnWindowSeconds * 1000,
+          pickCount: config.roundActionPickCount,
+          availableActions,
+        });
+      }
 
-    for (let index = 0; index < assignment.players.length; index++) {
-      const player = assignment.players[index]!;
-      const response = responses[index];
-      const availableActions = actionsByPlayer.get(player.playerId) ?? [];
-      const submittedTurn = response?.turnIndex;
-      if (response && submittedTurn === turnIndex) {
+      const actionTimeoutMs = config.turnWindowSeconds * 1000 + 500;
+      let responses: Record<string, unknown>[] = [];
+      try {
+        responses = await waitForAllClientMessages(
+          assignment.players.map((player) => ({ playerId: player.playerId, type: 'ActionSubmit' })),
+          actionTimeoutMs,
+        );
+      } catch {
+        responses = [];
+      }
+
+      for (let index = 0; index < assignment.players.length; index++) {
+        const player = assignment.players[index]!;
+        const response = responses[index];
+        const availableActions = offersByPlayer.get(player.playerId) ?? [];
         const availableIds = new Set(availableActions.map((action) => action.actionId));
-        const seen = new Set<string>();
-        const actions: TurnInput['actions'] = [];
-        for (const action of (response.actions as TurnInput['actions']) ?? []) {
-          if (actions.length >= config.roundActionPickCount) {
-            break;
+        const collected = collectedByPlayer.get(player.playerId) ?? [];
+
+        let picked: TurnInput['actions'][number] | null = null;
+        const submittedTurn = response?.turnIndex;
+        const submittedPickIndex = response?.pickIndex;
+        if (
+          response &&
+          submittedTurn === turnIndex &&
+          submittedPickIndex === pickStep &&
+          Array.isArray(response.actions)
+        ) {
+          const action = response.actions[0] as TurnInput['actions'][number] | undefined;
+          if (action && availableIds.has(action.actionId)) {
+            picked = action;
           }
-          if (!availableIds.has(action.actionId) || seen.has(action.actionId)) {
-            continue;
-          }
-          seen.add(action.actionId);
-          actions.push(action);
         }
-        if (actions.length > 0) {
-          turnInputs.push({
-            playerId: player.playerId,
-            turnIndex,
-            actions,
-          });
-          continue;
+
+        if (!picked) {
+          const fallback = pickBotTurnAction(availableActions, turnIndex, `${player.playerId}:${pickStep}`);
+          if (fallback) {
+            picked = { unitId: fallback.unitId, actionId: fallback.actionId };
+          }
+        }
+
+        if (picked) {
+          collected.push(picked);
+          collectedByPlayer.set(player.playerId, collected);
         }
       }
-      const fallback = pickBotTurnActions(
-        availableActions,
-        turnIndex,
-        player.playerId,
-        config.roundActionPickCount,
-      );
-      turnInputs.push({
-        playerId: player.playerId,
-        turnIndex,
-        actions: fallback.map((action) => ({
-          unitId: action.unitId,
-          actionId: action.actionId,
-        })),
-      });
     }
+
+    const turnInputs: TurnInput[] = assignment.players.map((player) => ({
+      playerId: player.playerId,
+      turnIndex,
+      actions: collectedByPlayer.get(player.playerId) ?? [],
+    }));
 
     const outcome = await processTurn(
       fieldUnits,

@@ -122,6 +122,9 @@ export interface components {
             playerId: string;
             username: string;
         };
+        JoinLobbyRequest: {
+            factionId: string;
+        };
         JoinLobbyResponse: {
             /** Format: uri */
             lobbyWsUrl: string;
@@ -243,7 +246,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinLobbyRequest"];
+            };
+        };
         responses: {
             /** @description Joined lobby queue */
             200: {

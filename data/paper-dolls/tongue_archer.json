@@ -1,0 +1,11 @@
+{
+  "id": "tongue_archer",
+  "unitId": "tongue_archer",
+  "canvasSize": 512,
+  "sprite": "tongue_archer.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a poison dart frog tongue archer with blowgun, green spotted frog skin, accent #34d399"
+}

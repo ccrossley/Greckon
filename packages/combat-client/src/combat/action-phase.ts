@@ -1,14 +1,15 @@
-import { pickBotTurnActions } from '@greckon/core';
+import { pickBotTurnAction } from '@greckon/core';
 
 export function runActionPhase(
   availableActions: Array<{ unitId: string; actionId: string; label: string }>,
   _deadlineMs: number,
   turnIndex: number,
   playerId: string,
-  pickCount = 3,
+  pickIndex: number,
 ): Promise<Array<{ unitId: string; actionId: string }>> {
-  const picks = pickBotTurnActions(availableActions, turnIndex, playerId, pickCount);
-  return Promise.resolve(
-    picks.map((pick) => ({ unitId: pick.unitId, actionId: pick.actionId })),
-  );
+  const pick = pickBotTurnAction(availableActions, turnIndex, `${playerId}:${pickIndex}`);
+  if (!pick) {
+    return Promise.resolve([]);
+  }
+  return Promise.resolve([{ unitId: pick.unitId, actionId: pick.actionId }]);
 }

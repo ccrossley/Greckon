@@ -1,0 +1,11 @@
+{
+  "id": "rage_toad",
+  "unitId": "rage_toad",
+  "canvasSize": 512,
+  "sprite": "rage_toad.png",
+  "anchor": [
+    0.5,
+    0.92
+  ],
+  "scenePrompt": "a large rage toad berserker with fierce expression and claws, green spotted frog skin, accent #ef4444"
+}

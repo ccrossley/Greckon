@@ -1,7 +1,9 @@
 import type { UnitType } from '@greckon/core';
 import {
+  createUnitSpriteGroup,
   getHealthBorderColor,
   getUnitIconPath,
+  hasUnitSprite,
   resolveUnitFillColor,
   UNIT_ICON_SIZE,
   UNIT_ICON_STROKE_WIDTH,
@@ -17,6 +19,14 @@ export function createUnitIcon(unitType: UnitType, level = 1, size = 36): SVGSVG
   svg.setAttribute('height', String(size));
   svg.setAttribute('viewBox', `0 0 ${UNIT_ICON_SIZE} ${UNIT_ICON_SIZE}`);
   svg.setAttribute('aria-hidden', 'true');
+
+  if (hasUnitSprite(unitType)) {
+    const sprite = createUnitSpriteGroup(unitType);
+    if (sprite) {
+      svg.appendChild(sprite);
+      return svg;
+    }
+  }
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', getUnitIconPath(unitType));
